@@ -17,8 +17,10 @@ package com.samsung.sra.experiments;
 
 import com.samsung.sra.datastore.RationalPowerWindowing;
 import com.samsung.sra.datastore.SummaryStore;
-import com.samsung.sra.datastore.aggregates.CMSOperator;
+import com.samsung.sra.datastore.aggregates.MaxOperator;
+import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
+import com.samsung.sra.datastore.aggregates.SumOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MeasureThroughput {
-    private static final String directory = "/mnt/md0/tdstore_throughput";
+    private static final String directory = "/data/tdstore_throughput";
     private static final Logger logger = LoggerFactory.getLogger(MeasureThroughput.class);
 
     public static void main(String[] args) throws Exception {
@@ -92,13 +94,35 @@ public class MeasureThroughput {
                     .setParallelizeMerge(10);
             try {
                 store.registerStream(streamID, false, wbmh,
-                        new SimpleCountOperator(), new CMSOperator(5, 1000, 0));
+                    new MaxOperator(),
+                    new MinOperator(),
+                    new SimpleCountOperator(),
+                    new SumOperator());
+                long maxLatency = Long.MIN_VALUE;
+                long minLatency = Long.MAX_VALUE;
+                double avgLatency = 0;
                 for (long t = 0; t < N; ++t) {
                     long v = random.nextLong(100);
+                    long startTime = System.nanoTime();
                     store.append(streamID, t, v);
+                    long endTime = System.nanoTime();
+                    long latency = endTime - startTime;
+                    maxLatency = Math.max(latency, maxLatency);
+                    minLatency = Math.min(latency, minLatency);
+                    avgLatency += latency;
+                    if ((t + 1) % 100_000_000 == 0) {
+                        logger.info("Stream {} Batch {}: max latency {}ns, min latency {}ns, " +
+                            "avg latency {}ns", streamID, (t + 1) / 100_000_000, maxLatency,
+                            minLatency, avgLatency / (double)100_000_000);
+                        maxLatency = Long.MIN_VALUE;
+                        minLatency = Long.MAX_VALUE;
+                        avgLatency = 0;
+                    }
                 }
-                /*store.flush(streamID);
-                wbmh.setBufferSize(0);*/
+                logger.info("Stream {}: max latency {}ns, min latency {}ns, avg latency {}ns",
+                    streamID, maxLatency, minLatency, avgLatency / (double)N);
+                store.flush(streamID);
+                wbmh.setBufferSize(0);
                 wbmh.flushAndSetUnbuffered();
                 logger.info("Populated stream {}", streamID);
                 if (semaphore != null) {
