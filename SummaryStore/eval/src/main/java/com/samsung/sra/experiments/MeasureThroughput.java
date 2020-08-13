@@ -101,7 +101,7 @@ public class MeasureThroughput {
                 long maxLatency = Long.MIN_VALUE;
                 long minLatency = Long.MAX_VALUE;
                 double avgLatency = 0;
-                long initialTime = System.currentTimeMillis();
+                long currentTime = System.currentTimeMillis();
                 for (long t = 0; t < N; ++t) {
                     long v = random.nextLong(100);
                     long startTime = System.nanoTime();
@@ -112,22 +112,16 @@ public class MeasureThroughput {
                     minLatency = Math.min(latency, minLatency);
                     avgLatency += latency;
                     if ((t + 1) % 100_000_000 == 0) {
-                        logger.info("Stream {} Batch {}: max latency {}ns, min latency {}ns, " +
-                            "avg latency {}ns", streamID, (t + 1) / 100_000_000, maxLatency,
-                            minLatency, avgLatency / (double)100_000_000);
+                        logger.info("Stream {} Batch {}: throughput {}points/s, max latency {}ns, " +
+                            "min latency {}ns, avg latency {}ns", streamID, (t + 1) / 100_000_000,
+                            (double)100_000_000 / ((System.currentTimeMillis() - currentTime) / (double)1000),
+                            maxLatency, minLatency, avgLatency / (double)100_000_000);
                         maxLatency = Long.MIN_VALUE;
                         minLatency = Long.MAX_VALUE;
                         avgLatency = 0;
-                    }
-                    long currentTime = System.currentTimeMillis();
-                    long interval = currentTime - initialTime;
-                    if (interval / 1000 < 5) {
-                        logger.info("Stream {} {}s: {} points",
-                            streamID, interval % 1000, t);
+                        currentTime = System.currentTimeMillis();
                     }
                 }
-                logger.info("Stream {}: max latency {}ns, min latency {}ns, avg latency {}ns",
-                    streamID, maxLatency, minLatency, avgLatency / (double)N);
                 store.flush(streamID);
                 wbmh.setBufferSize(0);
                 wbmh.flushAndSetUnbuffered();
