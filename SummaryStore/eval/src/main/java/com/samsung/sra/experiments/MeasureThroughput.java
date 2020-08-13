@@ -101,6 +101,7 @@ public class MeasureThroughput {
                 long maxLatency = Long.MIN_VALUE;
                 long minLatency = Long.MAX_VALUE;
                 double avgLatency = 0;
+                long initialTime = System.currentTimeMillis();
                 for (long t = 0; t < N; ++t) {
                     long v = random.nextLong(100);
                     long startTime = System.nanoTime();
@@ -117,6 +118,12 @@ public class MeasureThroughput {
                         maxLatency = Long.MIN_VALUE;
                         minLatency = Long.MAX_VALUE;
                         avgLatency = 0;
+                    }
+                    long currentTime = System.currentTimeMillis();
+                    long interval = currentTime - initialTime;
+                    if (interval / 1000 < 5) {
+                        logger.info("Stream {} {}s: {} points",
+                            streamID, interval % 1000, t);
                     }
                 }
                 logger.info("Stream {}: max latency {}ns, min latency {}ns, avg latency {}ns",
