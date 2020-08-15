@@ -121,10 +121,11 @@ public class MeasureThroughput {
                         minLatency = Long.MAX_VALUE;
                         avgLatency = 0;
                         currentTime = System.currentTimeMillis();
+                        store.flush(streamID);
                     }
                 }
-                store.flush(streamID);
-                wbmh.setBufferSize(0);
+                /*store.flush(streamID);
+                wbmh.setBufferSize(0);*/
                 wbmh.flushAndSetUnbuffered();
                 logger.info("Populated stream {}", streamID);
                 if (semaphore != null) {
