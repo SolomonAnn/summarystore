@@ -58,12 +58,12 @@ class LongIngestBuffer implements IngestBuffer {
 
     // FIXME: must reconstruct on SummaryStore reopen
     private transient LongArray timestamps, values;
-    private final int capacity;
+    private final long capacity;
     private int size = 0;
     private final int id;
     private static AtomicInteger num = new AtomicInteger(0);
 
-    LongIngestBuffer(int capacity) {
+    LongIngestBuffer(long capacity) {
         this.capacity = capacity;
         this.id = num.incrementAndGet();
 

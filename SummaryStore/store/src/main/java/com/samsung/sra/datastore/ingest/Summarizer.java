@@ -37,13 +37,13 @@ class Summarizer implements Runnable, Serializable {
                                                               // buffers here)
     private final CountBasedWBMH.FlushBarrier flushBarrier;
 
-    private int[] windowLengths;
+    private long[] windowLengths;
 
     private long N = 0;
 
     private transient StreamWindowManager windowManager = null;
 
-    Summarizer(int[] windowLengths,
+    Summarizer(long[] windowLengths,
                BlockingQueue<IngestBuffer> emptyBuffers, BlockingQueue<IngestBuffer> partialBuffers,
                BlockingQueue<IngestBuffer> summarizerQueue,
                BlockingQueue<SummaryWindow> writerQueue,
@@ -75,7 +75,7 @@ class Summarizer implements Runnable, Serializable {
             int bs = 0, be; // index of first and last elements in the buffer belonging to current window
             // invariant: at end of each loop, we have processed elements [0, 1, ..., bs-1]
             for (int w = W - 1; w >= 0; --w) {
-                be = bs + windowLengths[w] - 1;
+                be = bs + (int)windowLengths[w] - 1;
                 SummaryWindow window = windowManager.createEmptySummaryWindow(
                         buffer.getTimestamp(bs), buffer.getTimestamp(be), N + bs, N + be);
                 for (int c = bs; c <= be; ++c) {
@@ -112,7 +112,7 @@ class Summarizer implements Runnable, Serializable {
         throw new IllegalStateException("hit unreachable code");
     }
 
-    void setWindowLengths(int[] windowLengths) {
+    void setWindowLengths(long[] windowLengths) {
         this.windowLengths = windowLengths;
     }
 }
