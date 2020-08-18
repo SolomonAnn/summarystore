@@ -83,7 +83,7 @@ public class CountBasedWBMH implements Serializable {
      * buffers need to be aligned to window boundaries.
      *
      * WARNING: please ensure stream has been flushed before calling */
-    public CountBasedWBMH setBufferSize(int totalBufferSize, int numBuffers) {
+    public CountBasedWBMH setBufferSize(long totalBufferSize, int numBuffers) {
         destroyEmptyBuffers();
         int[] bufferWindowLengths = windowing.getWindowsCoveringUpto(totalBufferSize / numBuffers)
                 .stream().mapToInt(Long::intValue).toArray();
@@ -109,7 +109,7 @@ public class CountBasedWBMH implements Serializable {
      * aligned to window boundaries.
      *
      * WARNING: please ensure stream has been flushed before calling */
-    public CountBasedWBMH setBufferSize(int totalBufferSize) {
+    public CountBasedWBMH setBufferSize(long totalBufferSize) {
         return this.setBufferSize(totalBufferSize, 2);
     }
 
