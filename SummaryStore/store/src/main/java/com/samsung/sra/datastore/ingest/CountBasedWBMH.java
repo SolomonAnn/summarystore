@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.LongStream;
+import java.util.stream.IntStream;
 
 /**
  * Buffered mode setup: a pipeline of Ingester -> Summarizer -> Writer, as well as a Merger running in parallel.
@@ -83,12 +83,12 @@ public class CountBasedWBMH implements Serializable {
      * buffers need to be aligned to window boundaries.
      *
      * WARNING: please ensure stream has been flushed before calling */
-    public CountBasedWBMH setBufferSize(long totalBufferSize, int numBuffers) {
+    public CountBasedWBMH setBufferSize(int totalBufferSize, int numBuffers) {
         destroyEmptyBuffers();
-        long[] bufferWindowLengths = windowing.getWindowsCoveringUpto(totalBufferSize / numBuffers)
-                .stream().mapToLong(Long::intValue).toArray();
+        int[] bufferWindowLengths = windowing.getWindowsCoveringUpto(totalBufferSize / numBuffers)
+                .stream().mapToInt(Long::intValue).toArray();
         summarizer.setWindowLengths(bufferWindowLengths);
-        bufferSize = LongStream.of(bufferWindowLengths).sum(); // actual buffer size, <= numValuesToBuffer
+        bufferSize = IntStream.of(bufferWindowLengths).sum(); // actual buffer size, <= numValuesToBuffer
         logger.info("{} ingest buffers each covering {} windows and {} values", numBuffers, bufferWindowLengths.length, bufferSize);
         /*if (bufferSize == 0 && sizeOfNewestWindow > 1) {
             throw new UnsupportedOperationException("do not yet support unbuffered ingest when size of newest window > 1");
@@ -97,7 +97,7 @@ public class CountBasedWBMH implements Serializable {
             assert numBuffers > 0;
             for (int i = 0; i < numBuffers; ++i) {
                 emptyBuffers.add(valuesAreLongs
-                ? new LongIngestBuffer(bufferSize)
+                ? new LongIngestBuffer((int) bufferSize)
                 : new ObjectIngestBuffer((int) bufferSize));
             }
         }
@@ -109,7 +109,7 @@ public class CountBasedWBMH implements Serializable {
      * aligned to window boundaries.
      *
      * WARNING: please ensure stream has been flushed before calling */
-    public CountBasedWBMH setBufferSize(long totalBufferSize) {
+    public CountBasedWBMH setBufferSize(int totalBufferSize) {
         return this.setBufferSize(totalBufferSize, 2);
     }
 

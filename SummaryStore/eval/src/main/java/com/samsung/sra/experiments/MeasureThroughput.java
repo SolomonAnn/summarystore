@@ -25,6 +25,7 @@ import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -89,7 +90,7 @@ public class MeasureThroughput {
             if (semaphore != null) semaphore.acquireUninterruptibly();
             CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 1, 1))
                     .setValuesAreLongs(true)
-                    .setBufferSize(800_000_000)
+                    .setBufferSize(400_000_000)
                     .setWindowsPerMergeBatch(100_000)
                     .setParallelizeMerge(10);
             try {
@@ -114,16 +115,13 @@ public class MeasureThroughput {
                     if ((t + 1) % 100_000_000 == 0) {
                         logger.info("Stream {} Batch {}: cost {}s, throughput {}points/s, max latency {}ns, " +
                             "min latency {}ns, avg latency {}ns", streamID, (t + 1) / 100_000_000,
-                            (System.currentTimeMillis() - currentTime) / (double)1000,
-                            (double)100_000_000 / ((System.currentTimeMillis() - currentTime) / (double)1000),
-                            maxLatency, minLatency, avgLatency / (double)100_000_000);
+                            (System.currentTimeMillis() - currentTime) / 1000d,
+                            Math.round(100_000_000d / ((System.currentTimeMillis() - currentTime) / 1000d)),
+                            maxLatency, minLatency, avgLatency / 100_000_000d);
                         maxLatency = Long.MIN_VALUE;
                         minLatency = Long.MAX_VALUE;
                         avgLatency = 0;
                         currentTime = System.currentTimeMillis();
-                    }
-                    if ((t + 1) % 400_000_000 == 0) {
-                        store.flush(streamID);
                     }
                 }
                 /*store.flush(streamID);
