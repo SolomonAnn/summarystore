@@ -22,6 +22,8 @@ import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Spliterator;
@@ -171,6 +173,9 @@ public class RocksDBBackingStore extends BackingStore {
         try {
             byte[] key = getRocksDBKey(streamID, swid);
             byte[] value = serDe.serializeSummaryWindow(window);
+            LocalDateTime localDateTime = LocalDateTime.now();
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+            logger.info(localDateTime.format(dateTimeFormatter));
             rocksDB.put(rocksDBWriteOptions, key, value);
         } catch (RocksDBException e) {
             throw new BackingStoreException(e);
