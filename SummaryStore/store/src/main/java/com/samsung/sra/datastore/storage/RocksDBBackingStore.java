@@ -175,6 +175,7 @@ public class RocksDBBackingStore extends BackingStore {
             byte[] value = serDe.serializeSummaryWindow(window);
             LocalDateTime localDateTime = LocalDateTime.now();
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+            logger.info("putSummaryWindow");
             logger.info(localDateTime.format(dateTimeFormatter));
             rocksDB.put(rocksDBWriteOptions, key, value);
         } catch (RocksDBException e) {
@@ -272,6 +273,10 @@ public class RocksDBBackingStore extends BackingStore {
 
     @Override
     public void flushToDisk(long streamID, SerDe serDe) throws BackingStoreException {
+        LocalDateTime localDateTime = LocalDateTime.now();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        logger.info("flushToDisk");
+        logger.info(localDateTime.format(dateTimeFormatter));
         flushLandmarksToDisk(streamID, serDe);
         if (cache == null) return;
         Map<Long, SummaryWindow> streamCache = cache.get(streamID);
