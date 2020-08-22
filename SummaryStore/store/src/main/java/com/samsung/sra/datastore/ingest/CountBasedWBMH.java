@@ -170,6 +170,7 @@ public class CountBasedWBMH implements Serializable {
                 logger.info("N = {}M: {} unwritten windows, {} unprocessed merges, {} unissued merges, {} empty buffers",
                         N / 1_000_000,
                         writerQueue.size(), mergerQueue.size(), merger.getNumUnissuedMerges(), emptyBuffers.size());
+                logger.info("insert {} delete {} size {}", merger.getInsertCnt(), merger.getDeleteCnt(), merger.getSize());
             }
             ingester.append(ts, value);
         } else {
