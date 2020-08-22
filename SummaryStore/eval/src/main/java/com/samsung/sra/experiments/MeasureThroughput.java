@@ -17,6 +17,8 @@ package com.samsung.sra.experiments;
 
 import com.samsung.sra.datastore.RationalPowerWindowing;
 import com.samsung.sra.datastore.SummaryStore;
+import com.samsung.sra.datastore.aggregates.BloomFilterOperator;
+import com.samsung.sra.datastore.aggregates.CMSOperator;
 import com.samsung.sra.datastore.aggregates.MaxOperator;
 import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
@@ -89,7 +91,7 @@ public class MeasureThroughput {
             if (semaphore != null) semaphore.acquireUninterruptibly();
             CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 1, 1))
                     .setValuesAreLongs(true)
-                    .setBufferSize(400_000_000)
+                    .setBufferSize(800_000_000)
                     .setWindowsPerMergeBatch(100_000)
                     .setParallelizeMerge(10);
             try {
@@ -97,7 +99,9 @@ public class MeasureThroughput {
                     new MaxOperator(),
                     new MinOperator(),
                     new SimpleCountOperator(),
-                    new SumOperator());
+                    new SumOperator(),
+                    new CMSOperator(5, 1000, 0),
+                    new BloomFilterOperator(5, 1000));
                 long maxLatency = Long.MIN_VALUE;
                 long minLatency = Long.MAX_VALUE;
                 double avgLatency = 0;

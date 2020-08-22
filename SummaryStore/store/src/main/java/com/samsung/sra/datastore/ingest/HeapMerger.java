@@ -60,6 +60,8 @@ class HeapMerger extends Merger {
     private final FibonacciHeap<Long, Long> mergeCounts = new FibonacciHeap<>();
     private final WindowInfo windowInfo = new WindowInfo();
 
+    private long insertCnt = 0, deleteCnt = 0;
+
     HeapMerger(Windowing windowing, BlockingQueue<Merger.WindowInfo> newWindowNotifications,
                CountBasedWBMH.FlushBarrier flushBarrier,
                long windowsPerBatch) {
@@ -135,7 +137,13 @@ class HeapMerger extends Merger {
             WindowInfo.Info oldW1info = windowInfo.remove(w1ID);
             windowInfo.put(w0ID, newW0ce);
 
-            if (oldW1info.heapPtr != null) mergeCounts.delete(oldW1info.heapPtr);
+            if (oldW1info.heapPtr != null) {
+                mergeCounts.delete(oldW1info.heapPtr);
+                deleteCnt += 1;
+                if (deleteCnt % 100_000_000 == 0) {
+                    logger.info("delete {}", deleteCnt);
+                }
+            }
             updateMergeCountFor(wm1ID, w0ID, windowInfo.getCStart(wm1ID), newW0ce, N);
             updateMergeCountFor(w0ID, w2ID, newW0cs, windowInfo.getCEnd(w2ID), N);
         }
@@ -198,11 +206,21 @@ class HeapMerger extends Merger {
     private void updateMergeCountFor(Long w0ID, Long w1ID, Long c0, Long c1, long N) {
         if (w0ID == null || w1ID == null || c0 == null || c1 == null) return;
         Heap.Entry<Long, Long> existingEntry = windowInfo.unsetHeapPtr(w0ID);
-        if (existingEntry != null) mergeCounts.delete(existingEntry);
+        if (existingEntry != null) {
+            mergeCounts.delete(existingEntry);
+            deleteCnt += 1;
+            if (deleteCnt % 100_000_000 == 0) {
+                logger.info("delete {}", deleteCnt);
+            }
+        }
 
         long newMergeCount = windowing.getFirstContainingTime(c0, c1, N);
         if (newMergeCount != -1) {
             windowInfo.setHeapPtr(w0ID, mergeCounts.insert(newMergeCount, w0ID));
+            insertCnt += 1;
+            if (insertCnt % 100_000_000 == 0) {
+                logger.info("insert {}", insertCnt);
+            }
         }
     }
 
