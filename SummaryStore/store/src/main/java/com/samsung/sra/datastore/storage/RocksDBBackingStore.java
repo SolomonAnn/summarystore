@@ -22,8 +22,6 @@ import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Spliterator;
@@ -173,10 +171,6 @@ public class RocksDBBackingStore extends BackingStore {
         try {
             byte[] key = getRocksDBKey(streamID, swid);
             byte[] value = serDe.serializeSummaryWindow(window);
-            LocalDateTime localDateTime = LocalDateTime.now();
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-            logger.info("putSummaryWindow");
-            logger.info(localDateTime.format(dateTimeFormatter));
             rocksDB.put(rocksDBWriteOptions, key, value);
         } catch (RocksDBException e) {
             throw new BackingStoreException(e);
@@ -273,10 +267,6 @@ public class RocksDBBackingStore extends BackingStore {
 
     @Override
     public void flushToDisk(long streamID, SerDe serDe) throws BackingStoreException {
-        LocalDateTime localDateTime = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        logger.info("flushToDisk");
-        logger.info(localDateTime.format(dateTimeFormatter));
         flushLandmarksToDisk(streamID, serDe);
         if (cache == null) return;
         Map<Long, SummaryWindow> streamCache = cache.get(streamID);
