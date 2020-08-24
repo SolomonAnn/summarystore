@@ -212,8 +212,6 @@ class HeapMerger extends Merger {
             deleteCnt += 1;
         }
 
-        windowInfo.remove(w0ID);
-
         long newMergeCount = windowing.getFirstContainingTime(c0, c1, N);
         if (newMergeCount != -1) {
             windowInfo.setHeapPtr(w0ID, mergeCounts.insert(newMergeCount, w0ID));
