@@ -55,7 +55,7 @@ class Writer implements Runnable, Serializable {
         try {
             while (true) {
                 SummaryWindow window = Utilities.take(windowsToWrite);
-                logger.info("window {}", RamUsageEstimator.sizeOfObject(window));
+                logger.info("window {}", RamUsageEstimator.humanSizeOf(window));
                 if (window == SHUTDOWN_SENTINEL) {
                     flushBarrier.notify(CountBasedWBMH.FlushBarrier.WRITER);
                     break;

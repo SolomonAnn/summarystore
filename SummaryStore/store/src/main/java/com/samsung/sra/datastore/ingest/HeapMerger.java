@@ -307,15 +307,15 @@ class HeapMerger extends Merger {
         return deleteCnt;
     }
 
-    public long getSizeOfMergeCounts() {
-        return RamUsageEstimator.sizeOfObject(mergeCounts);
+    public String getSizeOfMergeCounts() {
+        return RamUsageEstimator.humanSizeOf(mergeCounts);
     }
 
-    public long getSizeOfWindowInfo() {
-        return RamUsageEstimator.sizeOfObject(windowInfo);
+    public String getSizeOfWindowInfo() {
+        return RamUsageEstimator.humanSizeOf(windowInfo);
     }
 
-    public long getSizeOfInfo() {
-        return RamUsageEstimator.sizeOfObject(windowInfo.getInfo());
+    public String getSizeOfInfo() {
+        return RamUsageEstimator.humanSizeOf(windowInfo.getInfo());
     }
 }
