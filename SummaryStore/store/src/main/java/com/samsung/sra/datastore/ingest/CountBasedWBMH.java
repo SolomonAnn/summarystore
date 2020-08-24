@@ -232,7 +232,7 @@ public class CountBasedWBMH implements Serializable {
 
     /** flush and set buffer size to zero. TODO: document better and integrate into SummaryStore.flush() */
     public void flushAndSetUnbuffered() throws BackingStoreException {
-        flush(true, true);
+        flush(false, true);
     }
 
     public void close() throws BackingStoreException {
