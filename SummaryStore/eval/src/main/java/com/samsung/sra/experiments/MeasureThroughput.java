@@ -126,6 +126,9 @@ public class MeasureThroughput {
                         avgLatency = 0;
                         currentTime = System.currentTimeMillis();
                     }
+                    if ((t + 1) % 400_000_000 == 0) {
+                        store.flush(streamID);
+                    }
                 }
                 /*store.flush(streamID);
                 wbmh.setBufferSize(0);*/

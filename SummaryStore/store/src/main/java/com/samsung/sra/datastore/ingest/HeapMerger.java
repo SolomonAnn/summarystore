@@ -23,7 +23,6 @@ import com.samsung.sra.datastore.Windowing;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.lucene.util.RamUsageEstimator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.teneighty.heap.FibonacciHeap;
@@ -60,8 +59,6 @@ class HeapMerger extends Merger {
      */
     private final FibonacciHeap<Long, Long> mergeCounts = new FibonacciHeap<>();
     private final WindowInfo windowInfo = new WindowInfo();
-
-    private long insertCnt = 0, deleteCnt = 0;
 
     HeapMerger(Windowing windowing, BlockingQueue<Merger.WindowInfo> newWindowNotifications,
                CountBasedWBMH.FlushBarrier flushBarrier,
@@ -138,10 +135,7 @@ class HeapMerger extends Merger {
             WindowInfo.Info oldW1info = windowInfo.remove(w1ID);
             windowInfo.put(w0ID, newW0ce);
 
-            if (oldW1info.heapPtr != null) {
-                mergeCounts.delete(oldW1info.heapPtr);
-                deleteCnt += 1;
-            }
+            if (oldW1info.heapPtr != null) mergeCounts.delete(oldW1info.heapPtr);
             updateMergeCountFor(wm1ID, w0ID, windowInfo.getCStart(wm1ID), newW0ce, N);
             updateMergeCountFor(w0ID, w2ID, newW0cs, windowInfo.getCEnd(w2ID), N);
         }
@@ -204,15 +198,11 @@ class HeapMerger extends Merger {
     private void updateMergeCountFor(Long w0ID, Long w1ID, Long c0, Long c1, long N) {
         if (w0ID == null || w1ID == null || c0 == null || c1 == null) return;
         Heap.Entry<Long, Long> existingEntry = windowInfo.unsetHeapPtr(w0ID);
-        if (existingEntry != null) {
-            mergeCounts.delete(existingEntry);
-            deleteCnt += 1;
-        }
+        if (existingEntry != null) mergeCounts.delete(existingEntry);
 
         long newMergeCount = windowing.getFirstContainingTime(c0, c1, N);
         if (newMergeCount != -1) {
             windowInfo.setHeapPtr(w0ID, mergeCounts.insert(newMergeCount, w0ID));
-            insertCnt += 1;
         }
     }
 
@@ -293,17 +283,5 @@ class HeapMerger extends Merger {
         private void setHeapPtr(long swid, Heap.Entry<Long, Long> ptr) {
             info.get(swid).heapPtr = ptr;
         }
-    }
-
-    public long getInsertCnt() {
-        return insertCnt;
-    }
-
-    public long getDeleteCnt() {
-        return deleteCnt;
-    }
-
-    public String getSize() {
-        return RamUsageEstimator.humanSizeOf(mergeCounts);
     }
 }
