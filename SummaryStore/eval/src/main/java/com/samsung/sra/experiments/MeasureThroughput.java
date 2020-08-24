@@ -92,8 +92,8 @@ public class MeasureThroughput {
             CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 1, 1))
                     .setValuesAreLongs(true)
                     .setBufferSize(800_000_000)
-                    .setWindowsPerMergeBatch(100_000)
-                    .setParallelizeMerge(10);
+                    .setWindowsPerMergeBatch(10_000)
+                    .setParallelizeMerge(100);
             try {
                 store.registerStream(streamID, false, wbmh,
                     new MaxOperator(),

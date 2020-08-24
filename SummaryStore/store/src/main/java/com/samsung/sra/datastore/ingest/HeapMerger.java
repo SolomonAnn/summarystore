@@ -188,8 +188,8 @@ class HeapMerger extends Merger {
         }
         stream.forEach(entry -> {
             try {
-                logger.info("tot {}", Runtime.getRuntime().availableProcessors());
-                logger.info("par {}", ForkJoinPool.getCommonPoolParallelism());
+//                logger.info("tot {}", Runtime.getRuntime().availableProcessors());
+//                logger.info("par {}", ForkJoinPool.getCommonPoolParallelism());
                 issuePendingMerge(entry);
             } catch (BackingStoreException e) {
                 throw new RuntimeException(e);
@@ -211,6 +211,8 @@ class HeapMerger extends Merger {
             mergeCounts.delete(existingEntry);
             deleteCnt += 1;
         }
+
+        windowInfo.remove(w0ID);
 
         long newMergeCount = windowing.getFirstContainingTime(c0, c1, N);
         if (newMergeCount != -1) {
