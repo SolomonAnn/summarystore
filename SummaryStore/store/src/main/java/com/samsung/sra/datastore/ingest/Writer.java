@@ -19,12 +19,17 @@ import com.samsung.sra.datastore.storage.BackingStoreException;
 import com.samsung.sra.datastore.storage.StreamWindowManager;
 import com.samsung.sra.datastore.SummaryWindow;
 import com.samsung.sra.datastore.Utilities;
+import org.apache.lucene.util.RamUsageEstimator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.concurrent.BlockingQueue;
 
 /** Write SummaryWindows to backing store and notify merger */
 class Writer implements Runnable, Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(Writer.class);
+
     static final SummaryWindow SHUTDOWN_SENTINEL = new SummaryWindow();
     static final SummaryWindow FLUSH_SENTINEL = new SummaryWindow();
 
@@ -50,6 +55,7 @@ class Writer implements Runnable, Serializable {
         try {
             while (true) {
                 SummaryWindow window = Utilities.take(windowsToWrite);
+                logger.info("window {}", RamUsageEstimator.sizeOfObject(window));
                 if (window == SHUTDOWN_SENTINEL) {
                     flushBarrier.notify(CountBasedWBMH.FlushBarrier.WRITER);
                     break;
