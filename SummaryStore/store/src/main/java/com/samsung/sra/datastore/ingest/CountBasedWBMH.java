@@ -167,8 +167,10 @@ public class CountBasedWBMH implements Serializable {
     public void append(long ts, Object value) throws BackingStoreException {
         if (bufferSize > 0) {
             if (N % 100_000_000 == 0) {
-                logger.info("insert {} delete {} size {} N = {}M: {} unwritten windows, {} unprocessed merges, {} unissued merges, {} empty buffers",
-                        merger.getInsertCnt(), merger.getDeleteCnt(), merger.getSize(), N / 1_000_000,
+                logger.info("insert {} delete {} mergeCounts {} windowInfo {} info {} N = {}M: {} unwritten windows, {} unprocessed merges, {} unissued merges, {} empty buffers",
+                        merger.getInsertCnt(), merger.getDeleteCnt(),
+                        merger.getSizeOfMergeCounts(), merger.getSizeOfWindowInfo(),
+                        merger.getSizeOfInfo(), N / 1_000_000,
                         writerQueue.size(), mergerQueue.size(), merger.getNumUnissuedMerges(), emptyBuffers.size());
             }
             ingester.append(ts, value);

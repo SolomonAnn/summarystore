@@ -293,6 +293,10 @@ class HeapMerger extends Merger {
         private void setHeapPtr(long swid, Heap.Entry<Long, Long> ptr) {
             info.get(swid).heapPtr = ptr;
         }
+
+        public TreeMap<Long, Info> getInfo() {
+            return info;
+        }
     }
 
     public long getInsertCnt() {
@@ -303,7 +307,15 @@ class HeapMerger extends Merger {
         return deleteCnt;
     }
 
-    public String getSize() {
-        return RamUsageEstimator.humanSizeOf(mergeCounts);
+    public long getSizeOfMergeCounts() {
+        return RamUsageEstimator.sizeOfObject(mergeCounts);
+    }
+
+    public long getSizeOfWindowInfo() {
+        return RamUsageEstimator.sizeOfObject(windowInfo);
+    }
+
+    public long getSizeOfInfo() {
+        return RamUsageEstimator.sizeOfObject(windowInfo.getInfo());
     }
 }
