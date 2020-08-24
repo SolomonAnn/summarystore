@@ -32,6 +32,7 @@ import org.teneighty.heap.Heap;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 /**
@@ -187,6 +188,8 @@ class HeapMerger extends Merger {
         }
         stream.forEach(entry -> {
             try {
+                logger.info("tot {}", Runtime.getRuntime().availableProcessors());
+                logger.info("par {}", ForkJoinPool.getCommonPoolParallelism());
                 issuePendingMerge(entry);
             } catch (BackingStoreException e) {
                 throw new RuntimeException(e);
