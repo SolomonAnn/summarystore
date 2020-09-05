@@ -117,11 +117,11 @@ public class MeasureThroughput {
                         startTime = System.currentTimeMillis();
                     }
                     if ((t + 1) % 100_000_000 == 0) {
-                        logger.info("Stream {} Batch {}: cost {}s, throughput {}points/s, max latency {}ns, " +
-                            "min latency {}ns, avg latency {}ns", streamID, (t + 1) / 100_000_000,
+                        logger.info("Stream {} Batch {}: cost {}s, throughput {}points/s, max latency {}ms, " +
+                            "min latency {}ms, avg latency {}ms", streamID, (t + 1) / 100_000_000,
                             (System.currentTimeMillis() - currentTime) / 1000d,
                             Math.round(100_000_000d / ((System.currentTimeMillis() - currentTime) / 1000d)),
-                            maxLatency, minLatency, avgLatency / 100_000_000d);
+                            maxLatency, minLatency, avgLatency / 2_000d);
                         maxLatency = Long.MIN_VALUE;
                         minLatency = Long.MAX_VALUE;
                         avgLatency = 0;
