@@ -93,7 +93,7 @@ public class MeasureThroughput {
                     .setValuesAreLongs(true)
                     .setBufferSize(800_000_000)
                     .setWindowsPerMergeBatch(100_000)
-                    .setParallelizeMerge(10);
+                    .setParallelizeMerge(100);
             try {
                 store.registerStream(streamID, false, wbmh,
                     new MaxOperator(),
@@ -106,15 +106,16 @@ public class MeasureThroughput {
                 long minLatency = Long.MAX_VALUE;
                 double avgLatency = 0;
                 long currentTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();;
                 for (long t = 0; t < N; ++t) {
                     long v = random.nextLong(100);
-                    long startTime = System.nanoTime();
                     store.append(streamID, t, v);
-                    long endTime = System.nanoTime();
-                    long latency = endTime - startTime;
-                    maxLatency = Math.max(latency, maxLatency);
-                    minLatency = Math.min(latency, minLatency);
-                    avgLatency += latency;
+                    if ((t + 1) % 50_000 == 0) {
+                        maxLatency = Math.max(System.currentTimeMillis() - startTime, maxLatency);
+                        minLatency = Math.min(System.currentTimeMillis() - startTime, minLatency);
+                        avgLatency += System.currentTimeMillis() - startTime;
+                        startTime = System.currentTimeMillis();
+                    }
                     if ((t + 1) % 100_000_000 == 0) {
                         logger.info("Stream {} Batch {}: cost {}s, throughput {}points/s, max latency {}ns, " +
                             "min latency {}ns, avg latency {}ns", streamID, (t + 1) / 100_000_000,
