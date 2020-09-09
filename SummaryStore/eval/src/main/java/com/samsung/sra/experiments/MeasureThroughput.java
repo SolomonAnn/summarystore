@@ -27,8 +27,8 @@ import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Random;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class MeasureThroughput {
     private static final String directory = "/data/tdstore_throughput";
@@ -76,14 +76,14 @@ public class MeasureThroughput {
         private final long streamID, N;
         private final SummaryStore store;
         private final Semaphore semaphore;
-        private final ThreadLocalRandom random;
+        private final Random random;
 
         private StreamWriter(SummaryStore store, Semaphore semaphore, long streamID, long N) throws Exception {
             this.store = store;
             this.semaphore = semaphore;
             this.streamID = streamID;
             this.N = N;
-            this.random = ThreadLocalRandom.current();
+            this.random = new Random(streamID);
         }
 
         @Override
@@ -108,7 +108,7 @@ public class MeasureThroughput {
                 long currentTime = System.currentTimeMillis();
                 long startTime = System.currentTimeMillis();;
                 for (long t = 0; t < N; ++t) {
-                    long v = random.nextLong(100);
+                    long v = random.nextLong();
                     store.append(streamID, t, v);
                     if ((t + 1) % 50_000 == 0) {
                         maxLatency = Math.max(System.currentTimeMillis() - startTime, maxLatency);
