@@ -108,7 +108,7 @@ public class MeasureThroughput {
                 long currentTime = System.currentTimeMillis();
                 long startTime = System.currentTimeMillis();;
                 for (long t = 0; t < N; ++t) {
-                    long v = random.nextLong();
+                    long v = random.nextInt(100);
                     store.append(streamID, t, v);
                     if ((t + 1) % 50_000 == 0) {
                         maxLatency = Math.max(System.currentTimeMillis() - startTime, maxLatency);
