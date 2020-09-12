@@ -4,7 +4,7 @@ import com.samsung.sra.datastore.StreamException;
 import com.samsung.sra.datastore.SummaryStore;
 import com.samsung.sra.datastore.storage.BackingStoreException;
 import com.samsung.sra.protocol.OpTypeOuterClass;
-import com.sun.tools.javac.util.Pair;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
