@@ -3,7 +3,6 @@ package com.samsung.sra.experiments;
 import com.samsung.sra.datastore.StreamException;
 import com.samsung.sra.datastore.SummaryStore;
 import com.samsung.sra.datastore.storage.BackingStoreException;
-import com.samsung.sra.protocol.OpTypeOuterClass;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +30,10 @@ public class QueryTest {
         QueryTest queryTest = new QueryTest();
 
         // test 1: 在已写好的数据上执行的query
-        queryTest.queryTest(store, OpTypeOuterClass.OpType.SUM_VALUE, QUERY_TIME);
-        queryTest.queryTest(store, OpTypeOuterClass.OpType.COUNT_VALUE, QUERY_TIME);
-        queryTest.queryTest(store, OpTypeOuterClass.OpType.MAX_VALUE, QUERY_TIME);
-        queryTest.queryTest(store, OpTypeOuterClass.OpType.MIN_VALUE, QUERY_TIME);
+        queryTest.queryTest(store, 3, QUERY_TIME);
+        queryTest.queryTest(store, 2, QUERY_TIME);
+        queryTest.queryTest(store, 0, QUERY_TIME);
+        queryTest.queryTest(store, 1, QUERY_TIME);
 
         // test 2: 定时Test
 //        Pair<List<Long>, List<Double>> pair = queryTest.timedQuery(
@@ -109,7 +108,7 @@ public class QueryTest {
     private long latestTime(SummaryStore store, int streamID) {
         long timestamp = 0L;
         try {
-            timestamp = (long)store.query(streamID, 0L, N, OpTypeOuterClass.OpType.MAX_VALUE);
+            timestamp = (long)store.query(streamID, 0L, N, 0);
         } catch (StreamException | BackingStoreException e) {
             logger.info(e.getMessage());
         }

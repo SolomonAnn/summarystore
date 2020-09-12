@@ -1,18 +1,18 @@
 /*
-* Copyright 2016 Samsung Research America. All rights reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016 Samsung Research America. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.samsung.sra.experiments;
 
 import com.samsung.sra.datastore.RationalPowerWindowing;
@@ -42,8 +42,8 @@ public class MeasureThroughput {
         long T = Long.parseLong(args[0].replace("_", ""));
         int nThreads = Integer.parseInt(args[1]);
         Semaphore parallelismSem = args.length > 2
-                ? new Semaphore(Integer.parseInt(args[2]))
-                : null;
+            ? new Semaphore(Integer.parseInt(args[2]))
+            : null;
         Runtime.getRuntime().exec(new String[]{"sh", "-c", "rm -rf " + directory}).waitFor();
 
         try (SummaryStore store = new SummaryStore(directory, new SummaryStore.StoreOptions().setKeepReadIndexes(false))) {
@@ -90,10 +90,10 @@ public class MeasureThroughput {
         public void run() {
             if (semaphore != null) semaphore.acquireUninterruptibly();
             CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 1, 1))
-                    .setValuesAreLongs(true)
-                    .setBufferSize(800_000_000)
-                    .setWindowsPerMergeBatch(100_000)
-                    .setParallelizeMerge(100);
+                .setValuesAreLongs(true)
+                .setBufferSize(800_000_000)
+                .setWindowsPerMergeBatch(100_000)
+                .setParallelizeMerge(100);
             try {
                 store.registerStream(streamID, false, wbmh,
                     new MaxOperator(),
@@ -118,7 +118,7 @@ public class MeasureThroughput {
                     }
                     if ((t + 1) % 100_000_000 == 0) {
                         logger.info("Stream {} Batch {}: cost {}s, throughput {}points/s, max latency {}ms, " +
-                            "min latency {}ms, avg latency {}ms", streamID, (t + 1) / 100_000_000,
+                                "min latency {}ms, avg latency {}ms", streamID, (t + 1) / 100_000_000,
                             (System.currentTimeMillis() - currentTime) / 1000d,
                             Math.round(100_000_000d / ((System.currentTimeMillis() - currentTime) / 1000d)),
                             maxLatency, minLatency, avgLatency / 2_000d);
