@@ -1,5 +1,6 @@
 package com.samsung.sra.experiments;
 
+import com.samsung.sra.datastore.ResultError;
 import com.samsung.sra.datastore.StreamException;
 import com.samsung.sra.datastore.SummaryStore;
 import com.samsung.sra.datastore.storage.BackingStoreException;
@@ -54,7 +55,8 @@ public class QueryTest {
             long t0 = System.currentTimeMillis();
             double res = 0;
             try {
-                res = (double)store.query(0L, startTime,startTime + queryLen.timeInMs, aggreFun);
+                ResultError re = (ResultError) store.query(0L, startTime,startTime + queryLen.timeInMs, aggreFun);
+                res = Double.parseDouble(re.result.toString());
             } catch (StreamException | BackingStoreException e) {
                 logger.info(e.getMessage());
             }
@@ -71,7 +73,7 @@ public class QueryTest {
     }
 
     public void queryTest(SummaryStore store, int aggreFun, int totalTimes) {
-        long latestTime = latestTime(store, 0);
+        long latestTime = N - 1;
         logger.info("Latest time in steram 0 is {}ms", latestTime);
         long st = System.currentTimeMillis();
 
@@ -91,7 +93,8 @@ public class QueryTest {
                     logger.info("stream = {}, aggreFun = {}, startTime = {}, endTime = {}, len = {}", streamID, aggreFun, startTime, endTime, queryLen.timeInMs);
                     long t0 = System.currentTimeMillis();
                     try {
-                        result[i][offset.ordinal()][queryLen.ordinal()] = (double)store.query(streamID, startTime, endTime, aggreFun);
+                        ResultError re = (ResultError) store.query(streamID, startTime, endTime, aggreFun);
+                        result[i][offset.ordinal()][queryLen.ordinal()] = Double.parseDouble(re.result.toString());
                     } catch (StreamException | BackingStoreException e) {
                         logger.info(e.getMessage());
                     }
@@ -103,16 +106,6 @@ public class QueryTest {
         logger.info("-QUERY-Execute {} {} queries in {} s.", totalTimes * 16, aggreFun, (System.currentTimeMillis() - st) / 1000);
         printLatency(latency);
         printQueryResult(result);
-    }
-
-    private long latestTime(SummaryStore store, int streamID) {
-        long timestamp = 0L;
-        try {
-            timestamp = (long)store.query(streamID, 0L, N, 0);
-        } catch (StreamException | BackingStoreException e) {
-            logger.info(e.getMessage());
-        }
-        return timestamp;
     }
 
     private void printLatency(long[][][] latency) {
