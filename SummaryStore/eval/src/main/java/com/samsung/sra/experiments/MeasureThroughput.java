@@ -36,13 +36,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.SplittableRandom;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MeasureThroughput {
     private static final String directory = "/data/tdstore_throughput";
     private static final Logger logger = LoggerFactory.getLogger(MeasureThroughput.class);
+
+    private static boolean isEnd = false;
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
@@ -63,27 +66,39 @@ public class MeasureThroughput {
                 writers[i] = new StreamWriter(store, parallelismSem, i, T);
                 writerThreads[i] = new Thread(writers[i], i + "-appender");
             }
+            AtomicInteger threadCnt = new AtomicInteger();
+            ThreadPoolExecutor timedQueryThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
+                4,
+                r -> new Thread(r, "Query-" + threadCnt.getAndIncrement())
+            );
+            int[] aggreFunArray = {3, 2, 0, 1};
+            Future<Pair<List<Long>, List<Double>>>[] queryFuture = new Future[aggreFunArray.length];
+            for(int i = 0; i < aggreFunArray.length; i++){
+                final int finali = i;
+                queryFuture[i] = timedQueryThreadPool.submit(()->
+                    timedQuery(store, 60000, aggreFunArray[finali], 3*30*86400*1000,7*86400*1000));
+            }
             long w0 = System.currentTimeMillis();
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].start();
             }
-            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            executorService.scheduleAtFixedRate(() -> {
-                try {
-                    for (int i = 0; i < 4; i++) {
-                        long startTime = System.currentTimeMillis();
-                        ResultError resultError = (ResultError) store.query(0L, 7776000000L,8380800000L, i);
-                        double result = Double.parseDouble(resultError.result.toString());
-                        logger.info("func {} latency {} ms result {}", i, System.currentTimeMillis() - startTime, result);
-                    }
-                } catch (StreamException | BackingStoreException e) {
-                    logger.info(e.getMessage());
-                }
-            }, 0, 1, TimeUnit.MINUTES);
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].join();
             }
             long we = System.currentTimeMillis();
+            isEnd = true;
+            for(int i = 0; i < aggreFunArray.length; i++){
+                Pair<List<Long>, List<Double>> queryResultPair = queryFuture[i].get();
+                StringBuilder latencyBuilder=new StringBuilder();
+                StringBuilder resultBuilder=new StringBuilder();
+                for(int j = 0;j < queryResultPair.getValue().size();j++){
+                    latencyBuilder.append(queryResultPair.getKey().get(j)).append(",");
+                    resultBuilder.append(queryResultPair.getValue().get(j)).append(",");
+                }
+
+                logger.info("[QUERY RESULT]-LATENCY for {} is {}",aggreFunArray[i], latencyBuilder.toString());
+                logger.info("[QUERY RESULT]-RESULT SET for {} is {}",aggreFunArray[i], resultBuilder.toString());
+            }
             logger.info("Write throughput = {} appends/s",  String.format("%,.0f", (nThreads * T * 1000d / (we - w0))));
             store.loadStream(0L);
             logger.info("Stream 0 has {} elements in {} windows", T, store.getNumSummaryWindows(0L));
@@ -93,6 +108,28 @@ public class MeasureThroughput {
             long fe = System.currentTimeMillis();
             logger.info("Time to run longest query, spanning [0, T) = {} sec", (fe - f0) / 1000d);*/
         }
+    }
+
+    public static Pair<List<Long>, List<Double>> timedQuery(SummaryStore store, long intervalTimeInMs, int aggreFun, long startTime, long queryLen) throws BackingStoreException, StreamException {
+        List<Long> latencys = new LinkedList<>();
+        List<Double> result = new ArrayList<>();
+        int cnt = 0;
+        while (!isEnd) {
+            long t0 = System.currentTimeMillis();
+            ResultError re = (ResultError) store.query(0L, startTime,startTime + queryLen, aggreFun);
+            double res = Double.parseDouble(re.result.toString());
+            result.add(res);
+            try {
+                Thread.sleep(intervalTimeInMs);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            long t1 = System.currentTimeMillis();
+            latencys.add((t1-t0));
+            cnt++;
+            logger.info("[QUERY] {} {} query cost {}ms, result is {}", cnt, aggreFun, (t1-t0), res);
+        }
+        return new Pair(latencys, result);
     }
 
     private static class StreamWriter implements Runnable {

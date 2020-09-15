@@ -37,14 +37,14 @@ public class QueryTest {
 //        queryTest.queryTest(store, 1, QUERY_TIME);
 
         // test 2: 定时Test
-        Pair<List<Long>, List<Double>> pair = queryTest.timedQuery(
-            store,
-            5 * 60 * 1000,
-            20,
-            3,
-            30 * 24 * 3600 * 1000,
-            TimeUnit.DAY
-        );
+//        Pair<List<Long>, List<Double>> pair = queryTest.timedQuery(
+//            store,
+//            5 * 60 * 1000,
+//            20,
+//            3,
+//            30 * 24 * 3600 * 1000,
+//            TimeUnit.DAY
+//        );
 
         logger.info("ALL TASK FINISH in {} min", (System.currentTimeMillis() - st) / 1000 / 60.0);
     }
