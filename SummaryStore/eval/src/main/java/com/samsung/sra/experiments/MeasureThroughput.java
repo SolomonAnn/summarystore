@@ -24,11 +24,16 @@ import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Random;
+import java.util.List;
+import java.util.SplittableRandom;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class MeasureThroughput {
     private static final String directory = "/data/tdstore_throughput";
@@ -57,6 +62,17 @@ public class MeasureThroughput {
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].start();
             }
+//            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+//            executorService.scheduleAtFixedRate(() -> {
+//                Pair<List<Long>, List<Double>> pair = new QueryTest().timedQuery(
+//                    store,
+//                    300000,
+//                    20,
+//                    3,
+//                    7776000000L,
+//                    QueryTest.TimeUnit.DAY
+//                );
+//            }, 0, 60000, TimeUnit.MILLISECONDS);
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].join();
             }
@@ -76,14 +92,14 @@ public class MeasureThroughput {
         private final long streamID, N;
         private final SummaryStore store;
         private final Semaphore semaphore;
-        private final Random random;
+        private final SplittableRandom splittableRandom;
 
         private StreamWriter(SummaryStore store, Semaphore semaphore, long streamID, long N) throws Exception {
             this.store = store;
             this.semaphore = semaphore;
             this.streamID = streamID;
             this.N = N;
-            this.random = new Random(streamID);
+            this.splittableRandom = new SplittableRandom(streamID);
         }
 
         @Override
@@ -106,10 +122,13 @@ public class MeasureThroughput {
                 long minLatency = Long.MAX_VALUE;
                 double avgLatency = 0;
                 long currentTime = System.currentTimeMillis();
-                long startTime = System.currentTimeMillis();;
+                long startTime = System.currentTimeMillis();
+                long time = 0;
+                ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
                 for (long t = 0; t < N; ++t) {
-                    long v = random.nextInt(100);
-                    store.append(streamID, t, v);
+                    long v = splittableRandom.nextInt(100);
+                    time += paretoDistribution.next(splittableRandom);
+                    store.append(streamID, time, v);
                     if ((t + 1) % 50_000 == 0) {
                         maxLatency = Math.max(System.currentTimeMillis() - startTime, maxLatency);
                         minLatency = Math.min(System.currentTimeMillis() - startTime, minLatency);

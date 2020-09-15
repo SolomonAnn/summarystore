@@ -27,6 +27,11 @@ public class ParetoDistribution implements Distribution<Long> {
         this.alpha = conf.getDouble("alpha");
     }
 
+    public ParetoDistribution(double xm, double alpha) {
+        this.xm = xm;
+        this.alpha = alpha;
+    }
+
     @Override
     public Long next(SplittableRandom random) {
         return (long)Math.ceil(xm / Math.pow(random.nextDouble(), 1 / alpha));

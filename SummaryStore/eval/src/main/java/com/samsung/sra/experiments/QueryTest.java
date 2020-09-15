@@ -31,19 +31,20 @@ public class QueryTest {
         QueryTest queryTest = new QueryTest();
 
         // test 1: 在已写好的数据上执行的query
-        queryTest.queryTest(store, 3, QUERY_TIME);
-        queryTest.queryTest(store, 2, QUERY_TIME);
-        queryTest.queryTest(store, 0, QUERY_TIME);
-        queryTest.queryTest(store, 1, QUERY_TIME);
+//        queryTest.queryTest(store, 3, QUERY_TIME);
+//        queryTest.queryTest(store, 2, QUERY_TIME);
+//        queryTest.queryTest(store, 0, QUERY_TIME);
+//        queryTest.queryTest(store, 1, QUERY_TIME);
 
         // test 2: 定时Test
-//        Pair<List<Long>, List<Double>> pair = queryTest.timedQuery(
-//            store,
-//            5 * 60 * 1000,
-//            20,
-//            OpTypeOuterClass.OpType.SUM_VALUE,
-//            30 * 24 * 3600 * 1000,
-//            TimeUnit.DAY);
+        Pair<List<Long>, List<Double>> pair = queryTest.timedQuery(
+            store,
+            5 * 60 * 1000,
+            20,
+            3,
+            30 * 24 * 3600 * 1000,
+            TimeUnit.DAY
+        );
 
         logger.info("ALL TASK FINISH in {} min", (System.currentTimeMillis() - st) / 1000 / 60.0);
     }
