@@ -16,6 +16,8 @@
 package com.samsung.sra.experiments;
 
 import com.samsung.sra.datastore.RationalPowerWindowing;
+import com.samsung.sra.datastore.ResultError;
+import com.samsung.sra.datastore.StreamException;
 import com.samsung.sra.datastore.SummaryStore;
 import com.samsung.sra.datastore.aggregates.BloomFilterOperator;
 import com.samsung.sra.datastore.aggregates.CMSOperator;
@@ -24,10 +26,13 @@ import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
+import com.samsung.sra.datastore.storage.BackingStoreException;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.SplittableRandom;
 import java.util.concurrent.Executors;
@@ -62,17 +67,19 @@ public class MeasureThroughput {
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].start();
             }
-//            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-//            executorService.scheduleAtFixedRate(() -> {
-//                Pair<List<Long>, List<Double>> pair = new QueryTest().timedQuery(
-//                    store,
-//                    300000,
-//                    20,
-//                    3,
-//                    7776000000L,
-//                    QueryTest.TimeUnit.DAY
-//                );
-//            }, 0, 60000, TimeUnit.MILLISECONDS);
+            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService.scheduleAtFixedRate(() -> {
+                try {
+                    for (int i = 0; i < 4; i++) {
+                        long startTime = System.currentTimeMillis();
+                        ResultError resultError = (ResultError) store.query(0L, 7776000000L,8380800000L, i);
+                        double result = Double.parseDouble(resultError.result.toString());
+                        logger.info("func {} latency {} ms result {}", i, System.currentTimeMillis() - startTime, result);
+                    }
+                } catch (StreamException | BackingStoreException e) {
+                    logger.info(e.getMessage());
+                }
+            }, 0, 1, TimeUnit.MINUTES);
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].join();
             }
@@ -124,10 +131,10 @@ public class MeasureThroughput {
                 long currentTime = System.currentTimeMillis();
                 long startTime = System.currentTimeMillis();
                 long time = 0;
-                ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
+                PoissonDistribution poissonDistribution = new PoissonDistribution(10);
                 for (long t = 0; t < N; ++t) {
                     long v = splittableRandom.nextInt(100);
-                    time += paretoDistribution.next(splittableRandom);
+                    time += poissonDistribution.next(splittableRandom);
                     store.append(streamID, time, v);
                     if ((t + 1) % 50_000 == 0) {
                         maxLatency = Math.max(System.currentTimeMillis() - startTime, maxLatency);
