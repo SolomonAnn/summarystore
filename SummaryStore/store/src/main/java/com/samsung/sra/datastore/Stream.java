@@ -193,7 +193,7 @@ class Stream implements Serializable {
         java.util.stream.Stream landmarkWindows = windowManager.getLandmarkWindowsOverlapping(t0, t1);
         Function<SummaryWindow, Object> summaryRetriever = b -> b.aggregates[operatorNum];
         try {
-	    return operators[operatorNum].query(
+            return operators[operatorNum].query(
                     stats, summaryWindows, summaryRetriever, landmarkWindows, t0, t1, queryParams);
         } catch (RuntimeException e) {
             if (e.getCause() instanceof BackingStoreException) {

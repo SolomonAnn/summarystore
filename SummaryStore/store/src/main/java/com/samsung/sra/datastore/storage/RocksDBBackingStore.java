@@ -278,7 +278,6 @@ public class RocksDBBackingStore extends BackingStore {
                 byte[] rocksValue = serDe.serializeSummaryWindow(window);
                 try {
                     rocksDB.put(rocksKey, rocksValue);
-                    logger.info("flush key {}", rocksKey);
                 } catch (RocksDBException e) {
                     throw new BackingStoreException(e);
                 }

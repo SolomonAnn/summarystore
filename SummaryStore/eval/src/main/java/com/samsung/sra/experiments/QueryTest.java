@@ -1,3 +1,18 @@
+/*
+* Copyright 2016 Samsung Research America. All rights reserved.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package com.samsung.sra.experiments;
 
 import com.samsung.sra.datastore.ResultError;
@@ -18,7 +33,10 @@ public class QueryTest {
     private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);
     private final Random random = new Random(11132313);
 
-    private static final long N = 31_250_000_000L;
+    private static final long N[] = {31_250_000_000L, 31_250_000_000L, 31_250_000_000L,
+                                     31_250_000_000L, 31_250_000_000L, 31_250_000_000L,
+                                     31_250_000_000L, 31_250_000_000L, 31_250_000_000L,
+                                     31_250_000_000L};
 
     private static final int TOTAL_STREAM_NUM = 10;
     private static final int QUERY_TIME = 5;
@@ -63,8 +81,6 @@ public class QueryTest {
     }
 
     public void queryTest(SummaryStore store, int aggreFun, int totalTimes) {
-        long latestTime = N - 1;
-        logger.info("Latest time in steram 0 is {}ms", latestTime);
         long st = System.currentTimeMillis();
 
         // queryId, offset, queryLen
@@ -73,13 +89,12 @@ public class QueryTest {
 
         for(int i = 0; i < totalTimes; i++){
             for(TimeUnit offset: TimeUnit.values()){
-                long endTime = latestTime - offset.timeInMs;
-                // 在offset的10%附近波动
+                long streamID = random.nextInt(TOTAL_STREAM_NUM);
+                long endTime = N[(int)streamID] - offset.timeInMs;
                 int range = random.nextInt((int) (offset.timeInMs * 0.05));
                 endTime += random.nextDouble() > 0.5 ? range: -range;
                 for(TimeUnit queryLen : TimeUnit.values()){
                     long startTime = endTime - queryLen.timeInMs;
-                    long streamID = random.nextInt(TOTAL_STREAM_NUM);
                     logger.info("stream = {}, aggreFun = {}, startTime = {}, endTime = {}, len = {}", streamID, aggreFun, startTime, endTime, queryLen.timeInMs);
                     long t0 = System.currentTimeMillis();
                     try {
