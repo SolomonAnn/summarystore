@@ -37,8 +37,11 @@ import java.util.List;
 import java.util.SplittableRandom;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MeasureThroughput {
@@ -82,6 +85,21 @@ public class MeasureThroughput {
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].start();
             }
+            ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor)Executors.newScheduledThreadPool(nThreads);
+            for (int i = 0; i < nThreads; ++i) {
+                executor.scheduleAtFixedRate(() -> {
+                    try {
+                        for (int j = 0; j < 4; j++) {
+                            long startTime = System.currentTimeMillis();
+                            ResultError resultError = (ResultError) store.query(0L, 7776000000L, 8380800000L, j);
+                            double result = Double.parseDouble(resultError.result.toString());
+                            logger.info("func {} latency {} ms result {}", j, System.currentTimeMillis() - startTime, result);
+                        }
+                    } catch (StreamException | BackingStoreException e) {
+                        logger.info(e.getMessage());
+                    }
+                }, 0, 1, TimeUnit.MINUTES);
+            }
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].join();
             }
@@ -103,6 +121,7 @@ public class MeasureThroughput {
             store.loadStream(0L);
             logger.info("Stream 0 has {} elements in {} windows", T, store.getNumSummaryWindows(0L));
 
+            executor.shutdown();
             /*long f0 = System.currentTimeMillis();
             store.query(0, 0, T - 1, 0);
             long fe = System.currentTimeMillis();
