@@ -27,7 +27,6 @@ import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import com.samsung.sra.datastore.storage.BackingStoreException;
-import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,27 +128,27 @@ public class MeasureThroughput {
         }
     }
 
-    public static Pair<List<Long>, List<Double>> timedQuery(SummaryStore store, long intervalTimeInMs, int aggreFun, long startTime, long queryLen) throws BackingStoreException, StreamException {
-        List<Long> latency = new LinkedList<>();
-        List<Double> result = new ArrayList<>();
-        int cnt = 0;
-        while (!isEnd) {
-            long t0 = System.currentTimeMillis();
-            ResultError re = (ResultError) store.query(0L, startTime,startTime + queryLen, aggreFun);
-            double res = Double.parseDouble(re.result.toString());
-            result.add(res);
-            try {
-                Thread.sleep(intervalTimeInMs);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            long t1 = System.currentTimeMillis();
-            latency.add((t1-t0));
-            cnt++;
-            logger.info("[QUERY] {} {} query cost {}ms, result is {}", cnt, aggreFun, (t1-t0), res);
-        }
-        return new Pair(latency, result);
-    }
+//    public static Pair<List<Long>, List<Double>> timedQuery(SummaryStore store, long intervalTimeInMs, int aggreFun, long startTime, long queryLen) throws BackingStoreException, StreamException {
+//        List<Long> latency = new LinkedList<>();
+//        List<Double> result = new ArrayList<>();
+//        int cnt = 0;
+//        while (!isEnd) {
+//            long t0 = System.currentTimeMillis();
+//            ResultError re = (ResultError) store.query(0L, startTime,startTime + queryLen, aggreFun);
+//            double res = Double.parseDouble(re.result.toString());
+//            result.add(res);
+//            try {
+//                Thread.sleep(intervalTimeInMs);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//            long t1 = System.currentTimeMillis();
+//            latency.add((t1-t0));
+//            cnt++;
+//            logger.info("[QUERY] {} {} query cost {}ms, result is {}", cnt, aggreFun, (t1-t0), res);
+//        }
+//        return new Pair(latency, result);
+//    }
 
     private static class StreamWriter implements Runnable {
         private final long streamID, N;
