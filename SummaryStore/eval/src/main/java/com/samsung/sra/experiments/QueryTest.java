@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.SplittableRandom;
 
 public class QueryTest {
     private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);
@@ -42,86 +41,25 @@ public class QueryTest {
     private static final String directory = "/data/tdstore_throughput";
 
     public static void main(String[] args) throws BackingStoreException, IOException, ClassNotFoundException {
-//        long time = 0;
-//        SplittableRandom splittableRandom = new SplittableRandom(0L);
-//        ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
-//        for (long i = 0; i < 31_250_000_000L; i++) {
-//            time += 1 + paretoDistribution.next(splittableRandom);
-//            splittableRandom.nextInt(100);
-//            if (i % 31_250_000L == 0) {
-//                System.out.println("round " + i / 31_250_000L + " time " + time);
-//            }
-//        }
-//        System.out.println(time);
-
-//        SplittableRandom splittableRandom = new SplittableRandom(0L);
-//        Distribution<Long> paretoDistribution = new ParetoDistribution(1.0, 1.2);
-//        long n = 31_250_000_000L;
-//        long t = 0;
-//        long time = 0;
-//        long batchSize = 50_000;
-//        while (t < n) {
-//            long size = Math.min(n - t, batchSize);
-//            for (long i = 0; i < size; i++) {
-//                time += paretoDistribution.next(splittableRandom) + 1;
-//                splittableRandom.nextInt(100);
-//                if (t % (n / 1_000L) == 0) {
-//                    System.out.println("round " + t / (n / 1_000L) + " time " + time);
-//                }
-//                t++;
-//            }
-//        }
-//        System.out.println(time);
-
-        SplittableRandom splittableRandom = new SplittableRandom(0L);
-        Distribution<Long> paretoDistribution = new ParetoDistribution(1.0, 1.2);
-        long n = 31_250_000_000L;
-        long t = 0;
-        long time = 0;
-        long batchSize = 50_000;
-        while (t < n) {
-            if (t + batchSize < n) {
-                for (int k = 0; k < batchSize; k++) {
-                    time += paretoDistribution.next(splittableRandom) + 1;
-                    splittableRandom.nextInt(100);
-                    if (t % (n / 1_000L) == 0) {
-                        System.out.println("round " + t / (n / 1_000L) + " time " + time);
-                    }
-                    t++;
-                }
-            } else {
-                int size = (int)(n - t);
-                for(int k = 0; k < size; k++){
-                    time += paretoDistribution.next(splittableRandom) + 1;
-                    splittableRandom.nextInt(100);
-                    if (t % (n / 1_000L) == 0) {
-                        System.out.println("round " + t / (n / 1_000L) + " time " + time);
-                    }
-                    t++;
-                }
-            }
+        if(args.length < 3){
+            System.err.println("SYNTAX: TOTAL_STREAM_NUM QUERY_NUM MONTH_OFFSET_LEN ");
+            System.exit(2);
         }
-        System.out.println(time);
 
-//        if(args.length < 3){
-//            System.err.println("SYNTAX: TOTAL_STREAM_NUM QUERY_NUM MONTH_OFFSET_LEN ");
-//            System.exit(2);
-//        }
-//
-//        TOTAL_STREAM_NUM = Integer.parseInt(args[0]);
-//        QUERY_TIME = Integer.parseInt(args[1]);
-//        MONTH_OFFSET_LEN = Integer.parseInt(args[2]);
-//
-//        SummaryStore store = new SummaryStore(directory);
-//        long st = System.currentTimeMillis();
-//        QueryTest queryTest = new QueryTest();
-//
-//        queryTest.queryTest(store, 3, QUERY_TIME);
-//        queryTest.queryTest(store, 2, QUERY_TIME);
-//        queryTest.queryTest(store, 0, QUERY_TIME);
-//        queryTest.queryTest(store, 1, QUERY_TIME);
-//
-//        logger.info("-QUERY-ALL TASK FINISH in {} min", (System.currentTimeMillis()-st)/1000/60.0);
+        TOTAL_STREAM_NUM = Integer.parseInt(args[0]);
+        QUERY_TIME = Integer.parseInt(args[1]);
+        MONTH_OFFSET_LEN = Integer.parseInt(args[2]);
+
+        SummaryStore store = new SummaryStore(directory);
+        long st = System.currentTimeMillis();
+        QueryTest queryTest = new QueryTest();
+
+        queryTest.queryTest(store, 3, QUERY_TIME);
+        queryTest.queryTest(store, 2, QUERY_TIME);
+        queryTest.queryTest(store, 0, QUERY_TIME);
+        queryTest.queryTest(store, 1, QUERY_TIME);
+
+        logger.info("-QUERY-ALL TASK FINISH in {} min", (System.currentTimeMillis()-st)/1000/60.0);
     }
 
     public void queryTest(SummaryStore store, int aggreFun, int totalTimes) {

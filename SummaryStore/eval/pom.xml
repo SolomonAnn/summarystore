@@ -42,11 +42,6 @@
             <artifactId>segment_trees</artifactId>
             <version>0.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-server</artifactId>
-            <version>0.9.1</version>
-        </dependency>
     </dependencies>
 
     <build>
