@@ -190,9 +190,9 @@ public class MeasureThroughput {
                 PoissonDistribution poissonDistribution = new PoissonDistribution(10);
 //                ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
                 for (long t = 0; t < N; ++t) {
-                    long v = splittableRandom.nextInt(100);
                     time += 1 + poissonDistribution.next(splittableRandom);
-//                    time += paretoDistribution.next(splittableRandom);
+//                    time += 1 + paretoDistribution.next(splittableRandom);
+                    long v = splittableRandom.nextInt(100);
                     store.append(streamID, time, v);
                     if ((t + 1) % 50_000 == 0) {
                         maxLatency = Math.max(System.currentTimeMillis() - startTime, maxLatency);

@@ -31,7 +31,7 @@ public class PoissonDistribution implements Distribution<Long> {
         double p = 1.0;
         do {
             k++;
-            p *= random.nextDouble();;
+            p *= random.nextDouble();
         } while (p >= l);
         return k - 1;
     }
