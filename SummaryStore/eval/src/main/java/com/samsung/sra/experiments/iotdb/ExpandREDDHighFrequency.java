@@ -26,51 +26,12 @@ public class ExpandREDDHighFrequency {
     private static final int batchSize = 50_000;
     private static final String encoding = "GORILLA";
 
-    private static List<List<Long>> times;
-    private static List<List<Float>> values;
-
     private static final String[] fileNames = {
         prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
         prefix + "5/current_1.dat", prefix + "5/current_2.dat", prefix + "5/voltage.dat",
     };
 
-    public ExpandREDDHighFrequency() {
-        this.times = new ArrayList<>();
-        this.values = new ArrayList<>();
-    }
-
     public static void main(String[] args) throws IOException, InterruptedException, StorageEngineException {
-        for (String fileName : fileNames) {
-            List<Long> time = new LinkedList<>();
-            List<Float> value = new LinkedList<>();
-            List<Long> intervals = new LinkedList<>();
-
-            DataReader reader = new DataReader(fileName);
-            List<String> data = reader.readData();
-
-            long prev = Long.parseLong(data.get(0).split(" ")[0].replace(".", ""));
-            for (int i = 1; i < data.size() - 1; i++) {
-                long curr = Long.parseLong(data.get(i).split(" ")[0].replace(".", ""));
-                intervals.add(curr - prev);
-                prev = curr;
-            }
-
-            for (int i = 0; i < data.size() - 1; i++) {
-                String[] points = data.get(i).split(" ");
-                long timestamp = Long.parseLong(points[0].replace(".", ""));
-                int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
-                long interval = intervals.get(i) / cycle / pointNumPerWave;
-                for (int j = 0; j < cycle; j++) {
-                    for (int k = 2; k < points.length; k++) {
-                        time.add(timestamp + interval * ((long) j * pointNumPerWave + k - 2));
-                        value.add(Float.parseFloat(points[k]));
-                    }
-                }
-            }
-            times.add(time);
-            values.add(value);
-        }
-
         Semaphore parallelismSem = new Semaphore(100);
         Runtime.getRuntime().exec(new String[]{"sh", "-c", "rm -rf " + directory}).waitFor();
         IoTDBConfigCheck.getInstance().checkConfig();
@@ -80,7 +41,7 @@ public class ExpandREDDHighFrequency {
         StreamWriter[] writers = new StreamWriter[threadsNum];
         Thread[] writerThreads = new Thread[threadsNum];
         for (int i = 0; i < threadsNum; i++) {
-            writers[i] = new StreamWriter(store, parallelismSem, i, batchSize, encoding, times.get(i), values.get(i));
+            writers[i] = new StreamWriter(store, parallelismSem, i, batchSize, encoding, fileNames[i]);
             writerThreads[i] = new Thread(writers[i], i + "-appender");
         }
         for (int i = 0; i < threadsNum; ++i) {
@@ -99,18 +60,16 @@ public class ExpandREDDHighFrequency {
         private final Semaphore semaphore;
         private final int batchSize;
         private final String encoding;
-        private final List<Long> time;
-        private final List<Float> value;
+        private final String fileName;
 
         private StreamWriter(IoTDB store, Semaphore semaphore, long streamID, int batchSize,
-                             String encoding, List<Long> time, List<Float> value) {
+                             String encoding, String fileName) {
             this.store = store;
             this.semaphore = semaphore;
             this.streamID = streamID;
             this.encoding = encoding;
             this.batchSize = batchSize;
-            this.time = time;
-            this.value = value;
+            this.fileName = fileName;
         }
 
         @Override
@@ -119,19 +78,47 @@ public class ExpandREDDHighFrequency {
                 semaphore.acquireUninterruptibly();
             }
             try {
+                List<Long> time = new LinkedList<>();
+                List<Float> value = new LinkedList<>();
+                List<Long> intervals = new LinkedList<>();
+
+                DataReader reader = new DataReader(fileName);
+                List<String> data = reader.readData();
+
+                long prev = Long.parseLong(data.get(0).split(" ")[0].replace(".", ""));
+                for (int i = 1; i < data.size() - 1; i++) {
+                    long curr = Long.parseLong(data.get(i).split(" ")[0].replace(".", ""));
+                    intervals.add(curr - prev);
+                    prev = curr;
+                }
+
+                for (int i = 0; i < data.size() - 1; i++) {
+                    String[] points = data.get(i).split(" ");
+                    long timestamp = Long.parseLong(points[0].replace(".", ""));
+                    int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
+                    long interval = intervals.get(i) / cycle / pointNumPerWave;
+                    for (int j = 0; j < cycle; j++) {
+                        for (int k = 2; k < points.length; k++) {
+                            time.add(timestamp + interval * ((long) j * pointNumPerWave + k - 2));
+                            value.add(Float.parseFloat(points[k]));
+                        }
+                    }
+                    logger.info("streamID {} ts {}", streamID, i);
+                }
+
                 String storageGroupName = "root.group_" + streamID;
                 String deviceName = "d";
                 String sensorName = "s" + streamID;
                 String dateType = "FLOAT";
 
                 store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
-                insertBatchWorker(storageGroupName, deviceName, sensorName);
+                insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
             } catch (MetadataException | PathException | StorageGroupException | IOException | StorageEngineException e) {
                 logger.info(e.getMessage());
             }
         }
 
-        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName) {
+        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Float> value) {
             String[] measurements = {sensorName};
             List<Integer> dataTypes = new ArrayList<>();
             dataTypes.add(TSDataType.FLOAT.ordinal());
@@ -158,6 +145,9 @@ public class ExpandREDDHighFrequency {
                     store.insertBatch(batchInsertPlan);
                 } catch (StorageEngineException e) {
                     logger.info(e.getMessage());
+                }
+                if (t % 100_000_000 == 0) {
+                    logger.info("streamID {} pt {}", streamID, t);
                 }
             }
         }
