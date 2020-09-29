@@ -40,8 +40,6 @@ public class MeasureThroughput {
     private static final String directory = "/data/tdstore_throughput";
     private static final Logger logger = LoggerFactory.getLogger(MeasureThroughput.class);
 
-    private static boolean isEnd = false;
-
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
             System.err.println("SYNTAX: MeasureThroughput numValuesPerThread numThreads [numParallelThreads]");
@@ -70,7 +68,7 @@ public class MeasureThroughput {
                 try {
                     for (int j = 0; j < 4; j++) {
                         long startTime = System.currentTimeMillis();
-                        ResultError resultError = (ResultError) store.query(0L, 7776000000L, 8380800000L, j);
+                        ResultError resultError = (ResultError) store.query(0L, 7776000000L, 23328000000L, j);
                         double result = Double.parseDouble(resultError.result.toString());
                         logger.info("func {} latency {} ms result {}", j, System.currentTimeMillis() - startTime, result);
                     }
