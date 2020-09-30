@@ -19,7 +19,6 @@ import java.util.concurrent.Semaphore;
 
 public class ExpandREDDHighFrequency {
     private static final Logger logger = LoggerFactory.getLogger(ExpandREDDHighFrequency.class);
-    private static final String directory = "/data/tdstore_throughput";
     private static final String prefix = "/data/redd/high_freq/house_";
     private static final int pointNumPerWave = 275;
     private static final int threadsNum = 6;
@@ -33,7 +32,6 @@ public class ExpandREDDHighFrequency {
 
     public static void main(String[] args) throws IOException, InterruptedException, StorageEngineException {
         Semaphore parallelismSem = new Semaphore(100);
-        Runtime.getRuntime().exec(new String[]{"sh", "-c", "rm -rf " + directory}).waitFor();
         IoTDBConfigCheck.getInstance().checkConfig();
         IoTDB store = IoTDB.getInstance();
         store.active();
