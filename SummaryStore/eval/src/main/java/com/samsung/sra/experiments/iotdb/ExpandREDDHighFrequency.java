@@ -83,6 +83,13 @@ public class ExpandREDDHighFrequency {
                 DataReader reader = new DataReader(fileName);
                 List<String> data = reader.readData();
 
+                String storageGroupName = "root.group_" + streamID;
+                String deviceName = "d";
+                String sensorName = "s" + streamID;
+                String dateType = "FLOAT";
+
+                store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
+
                 long prev = Long.parseLong(data.get(0).split(" ")[0].replace(".", ""));
                 for (int i = 1; i < data.size() - 1; i++) {
                     long curr = Long.parseLong(data.get(i).split(" ")[0].replace(".", ""));
@@ -101,16 +108,11 @@ public class ExpandREDDHighFrequency {
                             value.add(Float.parseFloat(points[k]));
                         }
                     }
+                    insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
                     logger.info("streamID {} ts {}", streamID, i);
+                    time.clear();
+                    value.clear();
                 }
-
-                String storageGroupName = "root.group_" + streamID;
-                String deviceName = "d";
-                String sensorName = "s" + streamID;
-                String dateType = "FLOAT";
-
-                store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
-                insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
             } catch (MetadataException | PathException | StorageGroupException | IOException | StorageEngineException e) {
                 logger.info(e.getMessage());
             }
@@ -143,9 +145,6 @@ public class ExpandREDDHighFrequency {
                     store.insertBatch(batchInsertPlan);
                 } catch (StorageEngineException e) {
                     logger.info(e.getMessage());
-                }
-                if (t % 100_000_000 == 0) {
-                    logger.info("streamID {} pt {}", streamID, t);
                 }
             }
         }
