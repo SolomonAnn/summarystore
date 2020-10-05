@@ -71,11 +71,11 @@ public class QueryTest {
 
         for(int i = 0; i< totalTimes; i++){
             for(TimeUnit offset: TimeUnit.values()){
-                long streamID = random.nextInt(TOTAL_STREAM_NUM);
-                long endTime = N[(int)streamID] - queryOffsetLen(offset) * offset.timeInMs;
-                int range = random.nextInt((int) (offset.timeInMs * 0.05));
-                endTime += random.nextDouble() > 0.5 ? range: -range;
                 for(TimeUnit queryLen : TimeUnit.values()){
+                    long streamID = random.nextInt(TOTAL_STREAM_NUM);
+                    long endTime = N[(int)streamID] - queryOffsetLen(offset) * offset.timeInMs;
+                    int range = random.nextInt((int) (offset.timeInMs * 0.05));
+                    endTime += random.nextDouble() > 0.5 ? range: -range;
                     long startTime = endTime - queryLen.timeInMs;
                     logger.info("stream = {}, aggreFun = {}, startTime = {}, endTime = {}, len = {}", streamID, aggreFun, startTime, endTime, queryLen.timeInMs);
                     long t0 = System.currentTimeMillis();

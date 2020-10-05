@@ -1,5 +1,7 @@
 package com.samsung.sra.experiments.iotdb;
 
+import com.google.common.primitives.Floats;
+import com.google.common.primitives.Longs;
 import org.apache.iotdb.db.conf.IoTDBConfigCheck;
 import org.apache.iotdb.db.exception.StorageEngineException;
 import org.apache.iotdb.db.exception.metadata.MetadataException;
@@ -22,8 +24,8 @@ public class ExpandREDDHighFrequency {
     private static final String prefix = "/data/redd/high_freq/house_";
     private static final int pointNumPerWave = 275;
     private static final int threadsNum = 6;
-    private static final int batchSize = 50_000;
     private static final String encoding = "GORILLA";
+    private static final int[] cycles = {3, 3, 3, 15, 15, 15};
 
     private static final String[] fileNames = {
         prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
@@ -39,7 +41,7 @@ public class ExpandREDDHighFrequency {
         StreamWriter[] writers = new StreamWriter[threadsNum];
         Thread[] writerThreads = new Thread[threadsNum];
         for (int i = 0; i < threadsNum; i++) {
-            writers[i] = new StreamWriter(store, parallelismSem, i, batchSize, encoding, fileNames[i]);
+            writers[i] = new StreamWriter(store, parallelismSem, i, encoding, fileNames[i]);
             writerThreads[i] = new Thread(writers[i], i + "-appender");
         }
         for (int i = 0; i < threadsNum; ++i) {
@@ -56,17 +58,14 @@ public class ExpandREDDHighFrequency {
         private final long streamID;
         private final IoTDB store;
         private final Semaphore semaphore;
-        private final int batchSize;
         private final String encoding;
         private final String fileName;
 
-        private StreamWriter(IoTDB store, Semaphore semaphore, long streamID, int batchSize,
-                             String encoding, String fileName) {
+        private StreamWriter(IoTDB store, Semaphore semaphore, long streamID, String encoding, String fileName) {
             this.store = store;
             this.semaphore = semaphore;
             this.streamID = streamID;
             this.encoding = encoding;
-            this.batchSize = batchSize;
             this.fileName = fileName;
         }
 
@@ -91,27 +90,35 @@ public class ExpandREDDHighFrequency {
                 store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
 
                 long prev = Long.parseLong(data.get(0).split(" ")[0].replace(".", ""));
-                for (int i = 1; i < data.size() - 1; i++) {
+                for (int i = 1; i < data.size(); i++) {
                     long curr = Long.parseLong(data.get(i).split(" ")[0].replace(".", ""));
                     intervals.add(curr - prev);
                     prev = curr;
                 }
 
-                for (int i = 0; i < data.size() - 1; i++) {
-                    String[] points = data.get(i).split(" ");
-                    long timestamp = Long.parseLong(points[0].replace(".", ""));
-                    int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
-                    long interval = intervals.get(i) / cycle / pointNumPerWave;
-                    for (int j = 0; j < cycle; j++) {
-                        for (int k = 2; k < points.length; k++) {
-                            time.add(timestamp + interval * ((long) j * pointNumPerWave + k - 2));
-                            value.add(Float.parseFloat(points[k]));
+                for (int c = 0; c < cycles[(int) streamID]; c++) {
+                    for (int i = 0; i < data.size() - 1; i++) {
+                        String[] points = data.get(i).split(" ");
+                        long timestamp = Long.parseLong(points[0].replace(".", ""));
+                        int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
+                        long interval = intervals.get(i) / cycle / pointNumPerWave;
+                        for (int j = 0; j < cycle; j++) {
+                            for (int k = 2; k < points.length; k++) {
+                                time.add(timestamp + interval * ((long) j * pointNumPerWave + k - 2));
+                                value.add(Float.parseFloat(points[k]));
+                            }
+                            if ((j + 1) % (49_500 / points.length) == 0) {
+                                insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
+                                logger.info("streamID {} ts {} cycle {}", streamID, i, j);
+                                time.clear();
+                                value.clear();
+                            }
                         }
+                        insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
+                        logger.info("streamID {} ts {}", streamID, i);
+                        time.clear();
+                        value.clear();
                     }
-                    insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
-                    logger.info("streamID {} ts {}", streamID, i);
-                    time.clear();
-                    value.clear();
                 }
             } catch (MetadataException | PathException | StorageGroupException | IOException | StorageEngineException e) {
                 logger.info(e.getMessage());
@@ -126,26 +133,17 @@ public class ExpandREDDHighFrequency {
                 storageGroupName + "." + deviceName,
                 measurements, dataTypes);
 
-            int t = 0;
-            while (t < time.size()) {
-                int size = Math.min(time.size() - t, batchSize);
-                long[] times = new long[size];
-                Object[] columns = new Object[1];
-                float[] values = new float[size];
-                for(int k = 0; k < size; k++){
-                    times[k] = time.get(t);
-                    values[k] = value.get(t);
-                    t++;
-                }
-                columns[0] = values;
-                batchInsertPlan.setTimes(times);
-                batchInsertPlan.setColumns(columns);
-                batchInsertPlan.setRowCount(times.length);
-                try {
-                    store.insertBatch(batchInsertPlan);
-                } catch (StorageEngineException e) {
-                    logger.info(e.getMessage());
-                }
+            long[] times = Longs.toArray(time);
+            float[] values = Floats.toArray(value);
+            Object[] columns = new Object[1];
+            columns[0] = values;
+            batchInsertPlan.setTimes(times);
+            batchInsertPlan.setColumns(columns);
+            batchInsertPlan.setRowCount(times.length);
+            try {
+                store.insertBatch(batchInsertPlan);
+            } catch (StorageEngineException e) {
+                logger.info(e.getMessage());
             }
         }
     }
