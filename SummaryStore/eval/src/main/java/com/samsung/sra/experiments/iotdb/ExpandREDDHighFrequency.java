@@ -96,10 +96,11 @@ public class ExpandREDDHighFrequency {
                     prev = curr;
                 }
 
+                long base = 0;
                 for (int c = 0; c < cycles[(int) streamID]; c++) {
                     for (int i = 0; i < data.size() - 1; i++) {
                         String[] points = data.get(i).split(" ");
-                        long timestamp = Long.parseLong(points[0].replace(".", ""));
+                        long timestamp = base + Long.parseLong(points[0].replace(".", ""));
                         int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
                         long interval = intervals.get(i) / cycle / pointNumPerWave;
                         for (int j = 0; j < cycle; j++) {
@@ -109,16 +110,17 @@ public class ExpandREDDHighFrequency {
                             }
                             if ((j + 1) % (49_500 / points.length) == 0) {
                                 insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
-                                logger.info("streamID {} ts {} cycle {}", streamID, i, j);
                                 time.clear();
                                 value.clear();
                             }
                         }
                         insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
-                        logger.info("streamID {} ts {}", streamID, i);
+                        logger.info("streamID {} wave {}", streamID, i);
                         time.clear();
                         value.clear();
                     }
+                    logger.info("streamID {} cycle {}", streamID, c);
+                    base += Long.parseLong(data.get(data.size() - 1).split(" ")[0].replace(".", ""));
                 }
             } catch (MetadataException | PathException | StorageGroupException | IOException | StorageEngineException e) {
                 logger.info(e.getMessage());

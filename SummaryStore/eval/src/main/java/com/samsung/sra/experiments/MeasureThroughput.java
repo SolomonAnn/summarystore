@@ -68,14 +68,14 @@ public class MeasureThroughput {
                 try {
                     for (int j = 2; j < 4; j++) {
                         long startTime = System.currentTimeMillis();
-                        ResultError resultError = (ResultError) store.query(0L, 7776000000L, 23328000000L, j);
+                        ResultError resultError = (ResultError) store.query(0L, 7776000000L, 15552000000L, j);
                         double result = Double.parseDouble(resultError.result.toString());
                         logger.info("func {} latency {} ms result {}", j, System.currentTimeMillis() - startTime, result);
                     }
                 } catch (StreamException | BackingStoreException e) {
                     logger.info(e.getMessage());
                 }
-            }, 0, 1, TimeUnit.MINUTES);
+            }, 0, 3, TimeUnit.MINUTES);
             for (int i = 0; i < nThreads; ++i) {
                 writerThreads[i].join();
             }
@@ -132,7 +132,7 @@ public class MeasureThroughput {
                 PoissonDistribution poissonDistribution = new PoissonDistribution(10);
 //                ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
                 for (long t = 0; t < N; ++t) {
-                    if (System.currentTimeMillis() - queryTime > 60_000L && streamID == 0L) {
+                    if (System.currentTimeMillis() - queryTime > 180_000L && streamID == 0L) {
                         logger.info("stream ID " + streamID + " time " + time);
                         queryTime = System.currentTimeMillis();
                     }
@@ -140,7 +140,7 @@ public class MeasureThroughput {
 //                    time += 1 + paretoDistribution.next(splittableRandom);
                     long v = splittableRandom.nextInt(100);
                     store.append(streamID, time, v);
-                    if (System.currentTimeMillis() - queryTime > 60_000L && streamID == 0L) {
+                    if (System.currentTimeMillis() - queryTime > 180_000L && streamID == 0L) {
                         logger.info("stream ID " + streamID + " time " + time);
                         queryTime = System.currentTimeMillis();
                     }

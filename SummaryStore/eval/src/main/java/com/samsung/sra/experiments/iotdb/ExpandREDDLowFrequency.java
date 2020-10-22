@@ -18,13 +18,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
 
 public class ExpandREDDLowFrequency {
     private static final Logger logger = LoggerFactory.getLogger(ExpandREDDLowFrequency.class);
     private static final String prefix = "/data/redd/low_freq/house_";
     private static final String suffix = "/channel_1.dat";
-    private static final int[] cycles = {10_000};
+    private static final int[] cycles = {100_000, 100_000, 100_000, 100_000, 500_000, 500_000};
     private static final int threadsNum = 6;
     private static final int batchSize = 50_000;
     private static final String encoding = "GORILLA";
@@ -98,11 +97,15 @@ public class ExpandREDDLowFrequency {
                     value.add(Float.parseFloat(datum.split(" ")[1]));
                 }
 
-                List<Long> insertTime = time;
                 for (int i = 0; i < cycles[(int) streamID]; i++) {
-                    insertBatchWorker(storageGroupName, deviceName, sensorName, insertTime, value);
-                    logger.info("streamID {} ts {}", streamID, i);
-                    insertTime = time.stream().map(x -> x + data.size()).collect(Collectors.toList());
+                    insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
+                    logger.info("streamID {} cycle {}", streamID, i);
+                    int len = time.size();
+                    long base = time.get(len - 1);
+                    time.clear();
+                    for (int j = 0; j < len; j++) {
+                        time.add(base + j + 1);
+                    }
                 }
             } catch (MetadataException | PathException | StorageGroupException | IOException | StorageEngineException e) {
                 logger.info(e.getMessage());
@@ -121,9 +124,6 @@ public class ExpandREDDLowFrequency {
             while (t < time.size()) {
                 int size = Math.min(time.size() - t, batchSize);
                 long[] times = Longs.toArray(time.subList(t, t + size));
-                for (long l : times) {
-                    logger.info("streamID {} time {}", streamID, l);
-                }
                 Object[] columns = new Object[1];
                 float[] values = Floats.toArray(value.subList(t, t + size));
                 columns[0] = values;
