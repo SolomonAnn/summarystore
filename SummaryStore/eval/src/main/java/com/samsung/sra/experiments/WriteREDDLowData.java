@@ -90,7 +90,7 @@ public class WriteREDDLowData {
 					new SumOperator(),
 					new CMSOperator(5, 1000, 0),
 					new BloomFilterOperator(5, 1000),
-					new QuantileOperator(50)
+					new QuantileOperator()
 				);
 				List<Long> time = new LinkedList<>();
 				List<Float> value = new LinkedList<>();
