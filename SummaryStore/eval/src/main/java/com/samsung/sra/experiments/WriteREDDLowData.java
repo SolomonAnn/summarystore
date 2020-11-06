@@ -102,6 +102,7 @@ public class WriteREDDLowData {
 				for (String datum : data) {
 					time[cnt] = Long.parseLong(datum.split(" ")[0]);
 					value[cnt] = Long.parseLong(datum.split(" ")[1].replace(".", ""));
+					cnt++;
 				}
 
 				for (int i = 0; i < cycles[(int) streamID]; i++) {
