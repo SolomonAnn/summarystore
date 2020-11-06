@@ -10,6 +10,7 @@ import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.QuantileOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
+import com.samsung.sra.datastore.aggregates.TDigestOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import com.samsung.sra.datastore.storage.BackingStoreException;
 import com.samsung.sra.experiments.iotdb.DataReader;
@@ -90,7 +91,7 @@ public class WriteREDDLowData {
 					new SumOperator(),
 					new CMSOperator(5, 1000, 0),
 					new BloomFilterOperator(5, 1000),
-					new QuantileOperator()
+					new TDigestOperator(100)
 				);
 				List<Long> time = new LinkedList<>();
 				List<Long> value = new LinkedList<>();

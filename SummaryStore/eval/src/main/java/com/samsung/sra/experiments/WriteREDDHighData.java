@@ -91,7 +91,7 @@ public class WriteREDDHighData {
 					new SumOperator(),
 					new CMSOperator(5, 1000, 0),
 					new BloomFilterOperator(5, 1000),
-					new QuantileOperator()
+					new TDigestOperator(100)
 				);
 				List<Long> intervals = new LinkedList<>();
 
