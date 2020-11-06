@@ -121,6 +121,7 @@ public class WriteREDDHighData {
 								store.append(streamID, time, value);
 							}
 						}
+						store.flush(streamID);
 						logger.info("streamID {} wave {}", streamID, i);
 					}
 					logger.info("streamID {} cycle {}", streamID, c);

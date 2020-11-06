@@ -109,6 +109,7 @@ public class WriteREDDLowData {
 					for (int j = 0; j < numbers[(int) streamID]; j++) {
 						store.append(streamID, time[j], value[j]);
 					}
+					store.flush(streamID);
 					logger.info("streamID {} cycle {}", streamID, i);
 					int len = numbers[(int) streamID];
 					long base = time[numbers[(int) streamID] - 1];
