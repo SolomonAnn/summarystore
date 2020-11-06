@@ -1,6 +1,5 @@
 package com.samsung.sra.experiments.iotdb;
 
-import com.google.common.primitives.Floats;
 import com.google.common.primitives.Longs;
 import org.apache.iotdb.db.conf.IoTDBConfigCheck;
 import org.apache.iotdb.db.exception.StorageEngineException;
@@ -23,14 +22,14 @@ public class ExpandREDDLowFrequency {
     private static final Logger logger = LoggerFactory.getLogger(ExpandREDDLowFrequency.class);
     private static final String prefix = "/data/redd/low_freq/house_";
     private static final String suffix = "/channel_1.dat";
-    private static final int[] cycles = {100_000, 100_000, 100_000, 100_000, 500_000, 500_000};
-    private static final int threadsNum = 6;
+    private static final int[] cycles = {50_000, 100_000, 50_000, 50_000, 250_000};
+    private static final int threadsNum = 5;
     private static final int batchSize = 50_000;
     private static final String encoding = "GORILLA";
 
     private static final String[] fileNames = {
         prefix + "1" + suffix, prefix + "2" + suffix, prefix + "3" + suffix,
-        prefix + "4" + suffix, prefix + "5" + suffix, prefix + "6" + suffix,
+        prefix + "4" + suffix, prefix + "5" + suffix,
     };
 
     public static void main(String[] args) throws IOException, InterruptedException, StorageEngineException {
@@ -80,7 +79,7 @@ public class ExpandREDDLowFrequency {
             }
             try {
                 List<Long> time = new LinkedList<>();
-                List<Float> value = new LinkedList<>();
+                List<Long> value = new LinkedList<>();
 
                 DataReader reader = new DataReader(fileName);
                 List<String> data = reader.readData();
@@ -88,13 +87,13 @@ public class ExpandREDDLowFrequency {
                 String storageGroupName = "root.group_" + streamID;
                 String deviceName = "d";
                 String sensorName = "s" + streamID;
-                String dateType = "FLOAT";
+                String dateType = "INT64";
 
                 store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
 
                 for (String datum : data) {
                     time.add(Long.parseLong(datum.split(" ")[0]));
-                    value.add(Float.parseFloat(datum.split(" ")[1]));
+                    value.add(Long.parseLong(datum.split(" ")[1].replace(".", "")));
                 }
 
                 for (int i = 0; i < cycles[(int) streamID]; i++) {
@@ -112,10 +111,10 @@ public class ExpandREDDLowFrequency {
             }
         }
 
-        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Float> value) {
+        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Long> value) {
             String[] measurements = {sensorName};
             List<Integer> dataTypes = new ArrayList<>();
-            dataTypes.add(TSDataType.FLOAT.ordinal());
+            dataTypes.add(TSDataType.INT64.ordinal());
             BatchInsertPlan batchInsertPlan = new BatchInsertPlan(
                 storageGroupName + "." + deviceName,
                 measurements, dataTypes);
@@ -125,7 +124,7 @@ public class ExpandREDDLowFrequency {
                 int size = Math.min(time.size() - t, batchSize);
                 long[] times = Longs.toArray(time.subList(t, t + size));
                 Object[] columns = new Object[1];
-                float[] values = Floats.toArray(value.subList(t, t + size));
+                long[] values = Longs.toArray(value.subList(t, t + size));
                 columns[0] = values;
                 batchInsertPlan.setTimes(times);
                 batchInsertPlan.setColumns(columns);

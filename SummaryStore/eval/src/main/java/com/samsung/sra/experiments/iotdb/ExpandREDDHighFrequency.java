@@ -1,6 +1,5 @@
 package com.samsung.sra.experiments.iotdb;
 
-import com.google.common.primitives.Floats;
 import com.google.common.primitives.Longs;
 import org.apache.iotdb.db.conf.IoTDBConfigCheck;
 import org.apache.iotdb.db.exception.StorageEngineException;
@@ -23,13 +22,13 @@ public class ExpandREDDHighFrequency {
     private static final Logger logger = LoggerFactory.getLogger(ExpandREDDHighFrequency.class);
     private static final String prefix = "/data/redd/high_freq/house_";
     private static final int pointNumPerWave = 275;
-    private static final int threadsNum = 6;
+    private static final int threadsNum = 5;
     private static final String encoding = "GORILLA";
-    private static final int[] cycles = {3, 3, 3, 15, 15, 15};
+    private static final int[] cycles = {6, 6, 6, 30, 30};
 
     private static final String[] fileNames = {
         prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
-        prefix + "5/current_1.dat", prefix + "5/current_2.dat", prefix + "5/voltage.dat",
+        prefix + "5/current_1.dat", prefix + "5/current_2.dat",
     };
 
     public static void main(String[] args) throws IOException, InterruptedException, StorageEngineException {
@@ -76,7 +75,7 @@ public class ExpandREDDHighFrequency {
             }
             try {
                 List<Long> time = new LinkedList<>();
-                List<Float> value = new LinkedList<>();
+                List<Long> value = new LinkedList<>();
                 List<Long> intervals = new LinkedList<>();
 
                 DataReader reader = new DataReader(fileName);
@@ -85,7 +84,7 @@ public class ExpandREDDHighFrequency {
                 String storageGroupName = "root.group_" + streamID;
                 String deviceName = "d";
                 String sensorName = "s" + streamID;
-                String dateType = "FLOAT";
+                String dateType = "INT64";
 
                 store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
 
@@ -106,7 +105,7 @@ public class ExpandREDDHighFrequency {
                         for (int j = 0; j < cycle; j++) {
                             for (int k = 2; k < points.length; k++) {
                                 time.add(timestamp + interval * ((long) j * pointNumPerWave + k - 2));
-                                value.add(Float.parseFloat(points[k]));
+                                value.add(Long.parseLong(points[k].replace(".", "")));
                             }
                             if ((j + 1) % (49_500 / points.length) == 0) {
                                 insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
@@ -127,16 +126,16 @@ public class ExpandREDDHighFrequency {
             }
         }
 
-        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Float> value) {
+        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Long> value) {
             String[] measurements = {sensorName};
             List<Integer> dataTypes = new ArrayList<>();
-            dataTypes.add(TSDataType.FLOAT.ordinal());
+            dataTypes.add(TSDataType.INT64.ordinal());
             BatchInsertPlan batchInsertPlan = new BatchInsertPlan(
                 storageGroupName + "." + deviceName,
                 measurements, dataTypes);
 
             long[] times = Longs.toArray(time);
-            float[] values = Floats.toArray(value);
+            long[] values = Longs.toArray(value);
             Object[] columns = new Object[1];
             columns[0] = values;
             batchInsertPlan.setTimes(times);
