@@ -27,12 +27,12 @@ public class WriteREDDHighData {
 	private static final String directory = "/data/tdstore_throughput_redd_high";
 	private static final String prefix = "/data/redd/high_freq/house_";
 	private static final int pointNumPerWave = 275;
-	private static final int threadsNum = 6;
-	private static final int[] cycles = {3, 3, 3, 15, 15, 15};
+	private static final int threadsNum = 5;
+	private static final int[] cycles = {6, 6, 6, 30, 30};
 
 	private static final String[] fileNames = {
 		prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
-		prefix + "5/current_1.dat", prefix + "5/current_2.dat", prefix + "5/voltage.dat",
+		prefix + "5/current_1.dat", prefix + "5/current_2.dat",
 	};
 
 	public static void main(String[] args) throws IOException, InterruptedException {
@@ -107,7 +107,7 @@ public class WriteREDDHighData {
 
 				long base = 0;
 				long time = 0;
-				float value;
+				long value;
 				for (int c = 0; c < cycles[(int) streamID]; c++) {
 					for (int i = 0; i < data.size() - 1; i++) {
 						String[] points = data.get(i).split(" ");
@@ -117,7 +117,7 @@ public class WriteREDDHighData {
 						for (int j = 0; j < cycle; j++) {
 							for (int k = 2; k < points.length; k++) {
 								time = timestamp + interval * ((long) j * pointNumPerWave + k - 2);
-								value = Float.parseFloat(points[k]);
+								value = Long.parseLong(points[k].replace(".", ""));
 								store.append(streamID, time, value);
 							}
 						}

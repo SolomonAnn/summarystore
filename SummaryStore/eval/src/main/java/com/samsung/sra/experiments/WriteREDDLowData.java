@@ -26,7 +26,7 @@ public class WriteREDDLowData {
 	private static final String directory = "/data/tdstore_throughput_redd_low";
 	private static final String prefix = "/data/redd/low_freq/house_";
 	private static final String suffix = "/channel_1.dat";
-	private static final int[] cycles = {100_000, 100_000, 100_000, 100_000, 500_000};
+	private static final int[] cycles = {50_000, 100_000, 50_000, 50_000, 250_000};
 	private static final int threadsNum = 5;
 
 	private static final String[] fileNames = {
@@ -93,14 +93,14 @@ public class WriteREDDLowData {
 					new QuantileOperator()
 				);
 				List<Long> time = new LinkedList<>();
-				List<Float> value = new LinkedList<>();
+				List<Long> value = new LinkedList<>();
 
 				DataReader reader = new DataReader(fileName);
 				List<String> data = reader.readData();
 
 				for (String datum : data) {
 					time.add(Long.parseLong(datum.split(" ")[0]));
-					value.add(Float.parseFloat(datum.split(" ")[1]));
+					value.add(Long.parseLong(datum.split(" ")[1].replace(".", "")));
 				}
 
 				for (int i = 0; i < cycles[(int) streamID]; i++) {
