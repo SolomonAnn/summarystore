@@ -1,6 +1,5 @@
 package com.samsung.sra.experiments.iotdb;
 
-import com.google.common.primitives.Longs;
 import org.apache.iotdb.db.conf.IoTDBConfigCheck;
 import org.apache.iotdb.db.exception.StorageEngineException;
 import org.apache.iotdb.db.exception.metadata.MetadataException;
@@ -14,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -78,11 +77,11 @@ public class ExpandREDDLowFrequency {
                 semaphore.acquireUninterruptibly();
             }
             try {
-                List<Long> time = new LinkedList<>();
-                List<Long> value = new LinkedList<>();
-
                 DataReader reader = new DataReader(fileName);
                 List<String> data = reader.readData();
+
+                long[] time = new long[data.size()];
+                long[] value = new long[data.size()];
 
                 String storageGroupName = "root.group_" + streamID;
                 String deviceName = "d";
@@ -91,19 +90,20 @@ public class ExpandREDDLowFrequency {
 
                 store.register(storageGroupName, deviceName, sensorName, dateType, encoding);
 
-                for (String datum : data) {
-                    time.add(Long.parseLong(datum.split(" ")[0]));
-                    value.add(Long.parseLong(datum.split(" ")[1].replace(".", "")));
+                int cnt = 0;
+                for (String point : data) {
+                    time[cnt] = Long.parseLong(point.split(" ")[0]);
+                    value[cnt] = Long.parseLong(point.split(" ")[1].replace(".", ""));
+                    cnt++;
                 }
 
                 for (int i = 0; i < cycles[(int) streamID]; i++) {
                     insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
                     logger.info("streamID {} cycle {}", streamID, i);
-                    int len = time.size();
-                    long base = time.get(len - 1);
-                    time.clear();
+                    int len = time.length;
+                    long base = time[time.length - 1];
                     for (int j = 0; j < len; j++) {
-                        time.add(base + j + 1);
+                        time[j] = base + j + 1;
                     }
                 }
             } catch (MetadataException | PathException | StorageGroupException | IOException | StorageEngineException e) {
@@ -111,7 +111,7 @@ public class ExpandREDDLowFrequency {
             }
         }
 
-        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Long> value) {
+        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, long[] time, long[] value) {
             String[] measurements = {sensorName};
             List<Integer> dataTypes = new ArrayList<>();
             dataTypes.add(TSDataType.INT64.ordinal());
@@ -120,11 +120,11 @@ public class ExpandREDDLowFrequency {
                 measurements, dataTypes);
 
             int t = 0;
-            while (t < time.size()) {
-                int size = Math.min(time.size() - t, batchSize);
-                long[] times = Longs.toArray(time.subList(t, t + size));
+            while (t < time.length) {
+                int size = Math.min(time.length - t, batchSize);
+                long[] times = Arrays.copyOfRange(time, t, t + size);
                 Object[] columns = new Object[1];
-                long[] values = Longs.toArray(value.subList(t, t + size));
+                long[] values = Arrays.copyOfRange(value, t, t + size);
                 columns[0] = values;
                 batchInsertPlan.setTimes(times);
                 batchInsertPlan.setColumns(columns);

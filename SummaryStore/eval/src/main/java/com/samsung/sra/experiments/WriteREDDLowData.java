@@ -9,7 +9,6 @@ import com.samsung.sra.datastore.aggregates.MaxOperator;
 import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
-import com.samsung.sra.datastore.aggregates.TDigestOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import com.samsung.sra.datastore.storage.BackingStoreException;
 import com.samsung.sra.experiments.iotdb.DataReader;
@@ -26,7 +25,6 @@ public class WriteREDDLowData {
 	private static final String prefix = "/data/redd/low_freq/house_";
 	private static final String suffix = "/channel_1.dat";
 	private static final int[] cycles = {50_000, 100_000, 50_000, 50_000, 250_000};
-	private static final int[] numbers = {1561660, 1198534, 1427284, 1679839, 302122};
 	private static final int threadsNum = 5;
 
 	private static final String[] fileNames = {
@@ -89,37 +87,36 @@ public class WriteREDDLowData {
 					new SimpleCountOperator(),
 					new SumOperator(),
 					new CMSOperator(5, 1000, 0),
-					new BloomFilterOperator(5, 1000),
-					new TDigestOperator(100)
+					new BloomFilterOperator(5, 1000)
 				);
-				long[] time = new long[numbers[(int) streamID]];
-				long[] value = new long[numbers[(int) streamID]];
-
 				DataReader reader = new DataReader(fileName);
 				List<String> data = reader.readData();
 
+				long[] time = new long[data.size()];
+				long[] value = new long[data.size()];
+
 				int cnt = 0;
-				for (String datum : data) {
-					time[cnt] = Long.parseLong(datum.split(" ")[0]);
-					value[cnt] = Long.parseLong(datum.split(" ")[1].replace(".", ""));
+				for (String point : data) {
+					time[cnt] = Long.parseLong(point.split(" ")[0]);
+					value[cnt] = Long.parseLong(point.split(" ")[1].replace(".", ""));
 					cnt++;
 				}
 
 				for (int i = 0; i < cycles[(int) streamID]; i++) {
-					for (int j = 0; j < numbers[(int) streamID]; j++) {
+					for (int j = 0; j < time.length; j++) {
 						store.append(streamID, time[j], value[j]);
 					}
 					logger.info("streamID {} cycle {}", streamID, i);
-					int len = numbers[(int) streamID];
-					long base = time[numbers[(int) streamID] - 1];
+					int len = time.length;
+					long base = time[time.length - 1];
 					for (int j = 0; j < len; j++) {
-						time[j] = (base + j + 1);
+						time[j] = base + j + 1;
 					}
 					if ((i + 1) % 1_000 == 0) {
 						store.flush(streamID);
 					}
 				}
-				logger.info("streamID {} time {}", streamID, time[numbers[(int) streamID] - 1]);
+				logger.info("streamID {} time {}", streamID, time[time.length - 1]);
 				wbmh.flushAndSetUnbuffered();
 				logger.info("Populated stream {}", streamID);
 				if (semaphore != null) {

@@ -9,7 +9,6 @@ import com.samsung.sra.datastore.aggregates.MaxOperator;
 import com.samsung.sra.datastore.aggregates.MinOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
-import com.samsung.sra.datastore.aggregates.TDigestOperator;
 import com.samsung.sra.datastore.ingest.CountBasedWBMH;
 import com.samsung.sra.datastore.storage.BackingStoreException;
 import com.samsung.sra.experiments.iotdb.DataReader;
@@ -17,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -89,18 +87,17 @@ public class WriteREDDHighData {
 					new SimpleCountOperator(),
 					new SumOperator(),
 					new CMSOperator(5, 1000, 0),
-					new BloomFilterOperator(5, 1000),
-					new TDigestOperator(100)
+					new BloomFilterOperator(5, 1000)
 				);
-				List<Long> intervals = new LinkedList<>();
-
 				DataReader reader = new DataReader(fileName);
 				List<String> data = reader.readData();
+
+				long[] intervals = new long[data.size() - 1];
 
 				long prev = Long.parseLong(data.get(0).split(" ")[0].replace(".", ""));
 				for (int i = 1; i < data.size(); i++) {
 					long curr = Long.parseLong(data.get(i).split(" ")[0].replace(".", ""));
-					intervals.add(curr - prev);
+					intervals[i - 1] = curr - prev;
 					prev = curr;
 				}
 
@@ -108,11 +105,11 @@ public class WriteREDDHighData {
 				long time = 0;
 				long value;
 				for (int c = 0; c < cycles[(int) streamID]; c++) {
-					for (int i = 0; i < data.size() - 1; i++) {
+					for (int i = 0; i < intervals.length; i++) {
 						String[] points = data.get(i).split(" ");
 						long timestamp = base + Long.parseLong(points[0].replace(".", ""));
 						int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
-						long interval = intervals.get(i) / cycle / pointNumPerWave;
+						long interval = intervals[i] / cycle / pointNumPerWave;
 						for (int j = 0; j < cycle; j++) {
 							for (int k = 2; k < points.length; k++) {
 								time = timestamp + interval * ((long) j * pointNumPerWave + k - 2);

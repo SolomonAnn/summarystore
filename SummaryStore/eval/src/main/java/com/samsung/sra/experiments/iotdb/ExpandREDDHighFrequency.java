@@ -1,6 +1,5 @@
 package com.samsung.sra.experiments.iotdb;
 
-import com.google.common.primitives.Longs;
 import org.apache.iotdb.db.conf.IoTDBConfigCheck;
 import org.apache.iotdb.db.exception.StorageEngineException;
 import org.apache.iotdb.db.exception.metadata.MetadataException;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -74,12 +72,12 @@ public class ExpandREDDHighFrequency {
                 semaphore.acquireUninterruptibly();
             }
             try {
-                List<Long> time = new LinkedList<>();
-                List<Long> value = new LinkedList<>();
-                List<Long> intervals = new LinkedList<>();
-
                 DataReader reader = new DataReader(fileName);
                 List<String> data = reader.readData();
+
+                long[] time = new long[pointNumPerWave];
+                long[] value = new long[pointNumPerWave];
+                long[] intervals = new long[data.size() - 1];
 
                 String storageGroupName = "root.group_" + streamID;
                 String deviceName = "d";
@@ -91,32 +89,28 @@ public class ExpandREDDHighFrequency {
                 long prev = Long.parseLong(data.get(0).split(" ")[0].replace(".", ""));
                 for (int i = 1; i < data.size(); i++) {
                     long curr = Long.parseLong(data.get(i).split(" ")[0].replace(".", ""));
-                    intervals.add(curr - prev);
+                    intervals[i - 1] = curr - prev;
                     prev = curr;
                 }
 
                 long base = 0;
                 for (int c = 0; c < cycles[(int) streamID]; c++) {
-                    for (int i = 0; i < data.size() - 1; i++) {
+                    for (int i = 0; i < intervals.length; i++) {
                         String[] points = data.get(i).split(" ");
                         long timestamp = base + Long.parseLong(points[0].replace(".", ""));
                         int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
-                        long interval = intervals.get(i) / cycle / pointNumPerWave;
+                        long interval = intervals[i] / cycle / pointNumPerWave;
                         for (int j = 0; j < cycle; j++) {
                             for (int k = 2; k < points.length; k++) {
-                                time.add(timestamp + interval * ((long) j * pointNumPerWave + k - 2));
-                                value.add(Long.parseLong(points[k].replace(".", "")));
+                                time[k - 2] = timestamp + interval * ((long) j * pointNumPerWave + k - 2);
+                                value[k - 2] = Long.parseLong(points[k].replace(".", ""));
                             }
                             if ((j + 1) % (49_500 / points.length) == 0) {
                                 insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
-                                time.clear();
-                                value.clear();
                             }
                         }
                         insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
                         logger.info("streamID {} wave {}", streamID, i);
-                        time.clear();
-                        value.clear();
                     }
                     logger.info("streamID {} cycle {}", streamID, c);
                     base += Long.parseLong(data.get(data.size() - 1).split(" ")[0].replace(".", ""));
@@ -126,7 +120,7 @@ public class ExpandREDDHighFrequency {
             }
         }
 
-        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, List<Long> time, List<Long> value) {
+        public void insertBatchWorker(String storageGroupName, String deviceName, String sensorName, long[] time, long[] value) {
             String[] measurements = {sensorName};
             List<Integer> dataTypes = new ArrayList<>();
             dataTypes.add(TSDataType.INT64.ordinal());
@@ -134,13 +128,11 @@ public class ExpandREDDHighFrequency {
                 storageGroupName + "." + deviceName,
                 measurements, dataTypes);
 
-            long[] times = Longs.toArray(time);
-            long[] values = Longs.toArray(value);
             Object[] columns = new Object[1];
-            columns[0] = values;
-            batchInsertPlan.setTimes(times);
+            columns[0] = value;
+            batchInsertPlan.setTimes(time);
             batchInsertPlan.setColumns(columns);
-            batchInsertPlan.setRowCount(times.length);
+            batchInsertPlan.setRowCount(time.length);
             try {
                 store.insertBatch(batchInsertPlan);
             } catch (StorageEngineException e) {
