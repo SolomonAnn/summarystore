@@ -7,7 +7,6 @@ import com.samsung.sra.datastore.aggregates.BloomFilterOperator;
 import com.samsung.sra.datastore.aggregates.CMSOperator;
 import com.samsung.sra.datastore.aggregates.MaxOperator;
 import com.samsung.sra.datastore.aggregates.MinOperator;
-import com.samsung.sra.datastore.aggregates.QuantileOperator;
 import com.samsung.sra.datastore.aggregates.SimpleCountOperator;
 import com.samsung.sra.datastore.aggregates.SumOperator;
 import com.samsung.sra.datastore.aggregates.TDigestOperator;
