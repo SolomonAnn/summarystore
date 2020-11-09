@@ -101,19 +101,28 @@ public class WriteREDDHighData {
 					prev = curr;
 				}
 
+				long[][] allPoints = new long[intervals.length][2 + pointNumPerWave];
+				for (int i = 0; i < intervals.length; i++) {
+					String[] points = data.get(i).split(" ");
+					allPoints[i][0] = Long.parseLong(points[0].replace(".", ""));
+					allPoints[i][1] = Long.parseLong(points[1].substring(0, points[1].indexOf('.')));
+					for (int j = 0; j < pointNumPerWave; j++) {
+						allPoints[i][j + 2] = Long.parseLong(points[j].replace(".", ""));
+					}
+				}
+
 				long base = 0;
 				long time = 0;
 				long value;
 				for (int c = 0; c < cycles[(int) streamID]; c++) {
 					for (int i = 0; i < intervals.length; i++) {
-						String[] points = data.get(i).split(" ");
-						long timestamp = base + Long.parseLong(points[0].replace(".", ""));
-						int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
+						long timestamp = base + (int) allPoints[i][1];
+						int cycle = (int) allPoints[i][1];
 						long interval = intervals[i] / cycle / pointNumPerWave;
 						for (int j = 0; j < cycle; j++) {
-							for (int k = 2; k < points.length; k++) {
-								time = timestamp + interval * ((long) j * pointNumPerWave + k - 2);
-								value = Long.parseLong(points[k].replace(".", ""));
+							for (int k = 0; k < pointNumPerWave; k++) {
+								time = timestamp + interval * ((long) j * pointNumPerWave + k);
+								value = allPoints[i][k + 2];
 								store.append(streamID, time, value);
 							}
 						}

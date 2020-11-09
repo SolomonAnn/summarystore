@@ -93,19 +93,28 @@ public class ExpandREDDHighFrequency {
                     prev = curr;
                 }
 
+                long[][] allPoints = new long[intervals.length][2 + pointNumPerWave];
+                for (int i = 0; i < intervals.length; i++) {
+                    String[] points = data.get(i).split(" ");
+                    allPoints[i][0] = Long.parseLong(points[0].replace(".", ""));
+                    allPoints[i][1] = Long.parseLong(points[1].substring(0, points[1].indexOf('.')));
+                    for (int j = 0; j < pointNumPerWave; j++) {
+                        allPoints[i][j + 2] = Long.parseLong(points[j].replace(".", ""));
+                    }
+                }
+
                 long base = 0;
                 for (int c = 0; c < cycles[(int) streamID]; c++) {
                     for (int i = 0; i < intervals.length; i++) {
-                        String[] points = data.get(i).split(" ");
-                        long timestamp = base + Long.parseLong(points[0].replace(".", ""));
-                        int cycle = Integer.parseInt(points[1].substring(0, points[1].indexOf('.')));
+                        long timestamp = base + allPoints[i][0];
+                        int cycle = (int) allPoints[i][1];
                         long interval = intervals[i] / cycle / pointNumPerWave;
+                        System.arraycopy(allPoints[i], 2, value, 0, pointNumPerWave);
                         for (int j = 0; j < cycle; j++) {
-                            for (int k = 2; k < points.length; k++) {
-                                time[k - 2] = timestamp + interval * ((long) j * pointNumPerWave + k - 2);
-                                value[k - 2] = Long.parseLong(points[k].replace(".", ""));
+                            for (int k = 0; k < pointNumPerWave; k++) {
+                                time[k] = timestamp + interval * ((long) j * pointNumPerWave + k);
                             }
-                            if ((j + 1) % (49_500 / points.length) == 0) {
+                            if ((j + 1) % (49_500 / (pointNumPerWave + 2)) == 0) {
                                 insertBatchWorker(storageGroupName, deviceName, sensorName, time, value);
                             }
                         }
