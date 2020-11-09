@@ -18,7 +18,7 @@ import java.util.concurrent.Semaphore;
 
 public class ExpandREDDHighFrequency {
     private static final Logger logger = LoggerFactory.getLogger(ExpandREDDHighFrequency.class);
-    private static final String prefix = "/data/redd/high_freq/house_";
+    private static final String prefix = "/Users/anyanzhe/workspace/data/redd/high_freq/house_";
     private static final int pointNumPerWave = 275;
     private static final int threadsNum = 5;
     private static final String encoding = "GORILLA";
