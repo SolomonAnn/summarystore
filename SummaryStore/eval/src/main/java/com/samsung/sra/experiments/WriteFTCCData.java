@@ -99,8 +99,7 @@ public class WriteFTCCData {
 						"2020-10-23 " + point.split("\\s+")[0],
 						DateTimeFormatter.ofPattern(format)
 					);
-					time[cnt] = localDateTime.toInstant(ZoneOffset.of("+8")).toEpochMilli() + localDateTime.getLong(ChronoField.MICRO_OF_SECOND) / 1000;
-					logger.info("streamID {} time {}", streamID, time[cnt]);
+					time[cnt] = localDateTime.toInstant(ZoneOffset.of("+8")).toEpochMilli() + localDateTime.getLong(ChronoField.MICRO_OF_SECOND);
 					value[cnt] = Long.parseLong(point.split("\\s+")[1].replace(".", ""));
 					cnt++;
 				}
