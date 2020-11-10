@@ -114,7 +114,7 @@ public class WriteFTCCData {
 					for (int j = 0; j < len; j++) {
 						time[j] = base + (j + 1) * 122L;
 					}
-					if ((i + 1) % 1_000 == 0) {
+					if ((i + 1) % 100 == 0) {
 						store.flush(streamID);
 					}
 				}
