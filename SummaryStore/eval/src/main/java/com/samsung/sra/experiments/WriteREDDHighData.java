@@ -116,7 +116,7 @@ public class WriteREDDHighData {
 				long value;
 				for (int c = 0; c < cycles[(int) streamID]; c++) {
 					for (int i = 0; i < intervals.length; i++) {
-						long timestamp = base + (int) allPoints[i][1];
+						long timestamp = base + allPoints[i][0];
 						int cycle = (int) allPoints[i][1];
 						long interval = intervals[i] / cycle / pointNumPerWave;
 						for (int j = 0; j < cycle; j++) {
