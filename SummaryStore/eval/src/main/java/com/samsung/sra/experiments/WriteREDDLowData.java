@@ -108,9 +108,9 @@ public class WriteREDDLowData {
 					}
 					logger.info("streamID {} cycle {}", streamID, i);
 					int len = time.length;
-					long base = time[time.length - 1];
+					long base = time[time.length - 1] - time[0];
 					for (int j = 0; j < len; j++) {
-						time[j] = base + j + 1;
+						time[j] += base + 1;
 					}
 					if ((i + 1) % 1_000 == 0) {
 						store.flush(streamID);

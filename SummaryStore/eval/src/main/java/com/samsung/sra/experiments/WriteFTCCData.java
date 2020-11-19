@@ -27,7 +27,7 @@ public class WriteFTCCData {
 	private static final Logger logger = LoggerFactory.getLogger(WriteFTCCData.class);
 	private static final String directory = "/data/tdstore_throughput_ftcc";
 	private static final String fileName = "/data/FTCC/FTPD-C919-10102-DH-201023-F-01-FTELPST-8192.txt";
-	private static final int cycle = 3500;
+	private static final int cycle = 500;
 	private static final int threadsNum = 5;
 	private static final String format = "yyyy-MM-dd HH:mm:ss:SSSSSS";
 
@@ -110,9 +110,9 @@ public class WriteFTCCData {
 					}
 					logger.info("streamID {} cycle {}", streamID, i);
 					int len = time.length;
-					long base = time[time.length - 1];
+					long base = time[time.length - 1] - time[0];
 					for (int j = 0; j < len; j++) {
-						time[j] = base + (j + 1) * 122L;
+						time[j] += base + 122L;
 					}
 					if ((i + 1) % 100 == 0) {
 						store.flush(streamID);

@@ -151,7 +151,7 @@ public class QueryREDDHighTest {
 		for(int i = 0; i< totalTimes; i++){
 			for(TimeUnit2 offset: TimeUnit2.values()){
 				for(TimeUnit2 queryLen : TimeUnit2.values()){
-					long streamID = random.nextInt(2);
+					long streamID = random.nextInt(2) + 2;
 					long endTime = N[(int)streamID] - queryOffsetLen2(offset) * offset.timeInUs;
 					int range = random.nextInt((int) (offset.timeInUs * 0.05));
 					endTime += random.nextDouble() > 0.5 ? range: -range;
