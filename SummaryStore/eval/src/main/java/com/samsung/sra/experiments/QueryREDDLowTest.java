@@ -55,7 +55,7 @@ public class QueryREDDLowTest {
 			for(TimeUnit offset: TimeUnit.values()){
 				for(TimeUnit queryLen : TimeUnit.values()){
 					long streamID = random.nextInt(TOTAL_STREAM_NUM);
-					long endTime = N[(int)streamID] - queryOffsetLen(offset) * offset.timeInSec;
+					long endTime = N[(int)streamID] - queryOffsetLen(offset, (int)streamID) * offset.timeInSec;
 					int range = random.nextInt((int) (offset.timeInSec * 0.05));
 					endTime += random.nextDouble() > 0.5 ? range: -range;
 					long startTime = endTime - queryLen.timeInSec;
@@ -77,7 +77,7 @@ public class QueryREDDLowTest {
 		printQueryResult(result);
 	}
 
-	private static int queryOffsetLen(TimeUnit offset){
+	private static int queryOffsetLen(TimeUnit offset, int streamId){
 		if(offset.equals(TimeUnit.YEAR)){
 			return random.nextInt(10);
 		} else if(offset.equals(TimeUnit.TENYEARS)){
@@ -85,9 +85,12 @@ public class QueryREDDLowTest {
 		} else if(offset.equals(TimeUnit.HUNDREDYEARS)){
 			return random.nextInt(10);
 		} else {
-			return 10;
+			long maxTime = N[streamId];
+			int range = (int)(maxTime / offset.timeInSec - 1);
+			return random.nextInt(range);
 		}
 	}
+
 
 	private void printLatency(long[][][] latency){
 		int totalTimes = latency.length;
