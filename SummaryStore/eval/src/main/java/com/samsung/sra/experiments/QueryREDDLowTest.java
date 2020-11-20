@@ -78,11 +78,11 @@ public class QueryREDDLowTest {
 	}
 
 	private static int queryOffsetLen(TimeUnit offset){
-		if(offset.equals(TimeUnit.MONTH)){
-			return random.nextInt(12);
-		} else if(offset.equals(TimeUnit.YEAR)){
+		if(offset.equals(TimeUnit.YEAR)){
 			return random.nextInt(10);
 		} else if(offset.equals(TimeUnit.TENYEARS)){
+			return random.nextInt(10);
+		} else if(offset.equals(TimeUnit.HUNDREDYEARS)){
 			return random.nextInt(10);
 		} else {
 			return 10;
@@ -122,10 +122,10 @@ public class QueryREDDLowTest {
 	}
 
 	enum TimeUnit{
-		MONTH(2_592_000L, "MONTH"),
 		YEAR(31_536_000L, "YEAR"),
 		TENYEARS(315_360_000L, "TENYEARS"),
-		HUNDREDYEARS(3_153_600_000L, "HUNDREDYEARS");
+		HUNDREDYEARS(3_153_600_000L, "HUNDREDYEARS"),
+		THOUSANDYEARS(31_536_000_000L, "THOUSANDYEARS");
 
 		long timeInSec;
 		String name;
