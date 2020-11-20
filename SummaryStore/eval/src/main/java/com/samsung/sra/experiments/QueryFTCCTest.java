@@ -14,7 +14,7 @@ public class QueryFTCCTest {
 	private static final Logger logger = LoggerFactory.getLogger(QueryFTCCTest.class);
 	private static final Random random = new Random(11132313);
 
-	private static final long N[] = {1605865396967854L, 1605865396967854L, 1605865396967854L, 1605865396967854L, 1605865396967854L};
+	private static final long N[] = {1605906804987854L, 1605906804987854L, 1605906804987854L, 1605906804987854L, 1605906804987854L};
 
 	private static int TOTAL_STREAM_NUM = 5;
 	private static int QUERY_TIME = 100;

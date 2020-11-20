@@ -13,7 +13,7 @@ public class ProphetREDDLow {
 	private static final Logger logger = LoggerFactory.getLogger(ProphetREDDLow.class);
 
 	private static final long start[] = {1303132929L, 1303082307L, 1302930687L, 1303002979L, 1303100643L};
-	private static final long end[] = {79389267022L, 121159508756L, 72671001194L, 85299098345L, 76837387620L};
+	private static final long end[] = {158010967022L, 303951108756L, 194832201194L, 208575498345L, 948051387620L};
 
 	private static int[] stream = {0, 1, 2, 3, 4};
 	private static long[][] offset = {

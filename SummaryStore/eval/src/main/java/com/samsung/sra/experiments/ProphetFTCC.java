@@ -13,7 +13,7 @@ public class ProphetFTCC {
 	private static final Logger logger = LoggerFactory.getLogger(ProphetFTCC.class);
 
 	private static final long start = 1603417336000000L;
-	private static final long end = 1605865396967854L;
+	private static final long end = 1605906804987854L;
 
 	private static int[] stream = {0, 1, 2, 3, 4};
 	private static int QUERY_TIME = 10000;

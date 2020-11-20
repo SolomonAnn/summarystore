@@ -14,7 +14,7 @@ public class QueryREDDLowTest {
 	private static final Logger logger = LoggerFactory.getLogger(QueryREDDLowTest.class);
 	private static final Random random = new Random(11132313);
 
-	private static final long N[] = {79389267022L, 121159508756L, 72671001194L, 85299098345L, 76837387620L};
+	private static final long N[] = {158010967022L, 303951108756L, 194832201194L, 208575498345L, 948051387620L};
 
 	private static int TOTAL_STREAM_NUM = 5;
 	private static int QUERY_TIME = 100;
