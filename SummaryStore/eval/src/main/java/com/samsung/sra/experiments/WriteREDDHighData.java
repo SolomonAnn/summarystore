@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -25,11 +26,11 @@ public class WriteREDDHighData {
 	private static final String prefix = "/data/redd/high_freq/house_";
 	private static final int pointNumPerWave = 275;
 	private static final int threadsNum = 5;
-	private static final int[] cycles = {6, 6, 6, 30, 30};
+	private static final int[] cycles = {3, 3, 0, 15, 15};
 
 	private static final String[] fileNames = {
-		prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
-		prefix + "5/current_1.dat", prefix + "5/current_2.dat",
+			prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
+			prefix + "5/current_1.dat", prefix + "5/current_2.dat",
 	};
 
 	public static void main(String[] args) throws IOException, InterruptedException {
@@ -76,18 +77,18 @@ public class WriteREDDHighData {
 				semaphore.acquireUninterruptibly();
 			}
 			CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 1, 1))
-				.setValuesAreLongs(true)
-				.setBufferSize(800_000_000)
-				.setWindowsPerMergeBatch(100_000)
-				.setParallelizeMerge(100);
+					.setValuesAreLongs(true)
+					.setBufferSize(800_000_000)
+					.setWindowsPerMergeBatch(100_000)
+					.setParallelizeMerge(100);
 			try {
 				store.registerStream(streamID, false, wbmh,
-					new MaxOperator(),
-					new MinOperator(),
-					new SimpleCountOperator(),
-					new SumOperator(),
-					new CMSOperator(5, 1000, 0),
-					new BloomFilterOperator(5, 1000)
+						new MaxOperator(),
+						new MinOperator(),
+						new SimpleCountOperator(),
+						new SumOperator(),
+						new CMSOperator(5, 1000, 0),
+						new BloomFilterOperator(5, 1000)
 				);
 				DataReader reader = new DataReader(fileName);
 				List<String> data = reader.readData();
@@ -132,7 +133,7 @@ public class WriteREDDHighData {
 						logger.info("streamID {} wave {}", streamID, i);
 					}
 					logger.info("streamID {} cycle {}", streamID, c);
-					base += Long.parseLong(data.get(data.size() - 1).split(" ")[0].replace(".", ""));
+					base += Arrays.stream(intervals).max().getAsLong();
 				}
 				logger.info("streamID {} time {}", streamID, time);
 				wbmh.flushAndSetUnbuffered();
