@@ -16,7 +16,7 @@ public class QueryREDDHighTest {
 
 	private static final long N[] = {3919626153380631L, 3919625622616987L, 0L, 19603310575004711L, 19603310382523444L};
 
-	private static int TOTAL_STREAM_NUM = 5;
+	private static int TOTAL_STREAM_NUM =4;
 	private static int QUERY_TIME = 100;
 	private static int MONTH_OFFSET_LEN = 6;
 
@@ -54,8 +54,8 @@ public class QueryREDDHighTest {
 		for(int i = 0; i< totalTimes; i++){
 			for(TimeUnit offset: TimeUnit.values()){
 				for(TimeUnit queryLen : TimeUnit.values()){
-					long streamID = random.nextInt(2);
-					long endTime = N[(int)streamID] - queryOffsetLen1(offset) * offset.timeInUs;
+					long streamID = random.nextInt(4);
+					long endTime = N[(int)streamID] - queryOffsetLen(offset) * offset.timeInUs;
 					int range = random.nextInt((int) (offset.timeInUs * 0.05));
 					endTime += random.nextDouble() > 0.5 ? range: -range;
 					long startTime = endTime - queryLen.timeInUs;
@@ -77,7 +77,7 @@ public class QueryREDDHighTest {
 		printQueryResult(result);
 	}
 
-	private static int queryOffsetLen1(TimeUnit offset){
+	private static int queryOffsetLen(TimeUnit offset){
 		if(offset.equals(TimeUnit.HOUR)){
 			return random.nextInt(24);
 		} else if(offset.equals(TimeUnit.DAY)){

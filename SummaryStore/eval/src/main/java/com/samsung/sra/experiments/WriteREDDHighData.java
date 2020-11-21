@@ -25,11 +25,11 @@ public class WriteREDDHighData {
 	private static final String directory = "/data/tdstore_throughput_redd_high";
 	private static final String prefix = "/data/redd/high_freq/house_";
 	private static final int pointNumPerWave = 275;
-	private static final int threadsNum = 5;
-	private static final int[] cycles = {3, 3, 0, 15, 15};
+	private static final int threadsNum = 4;
+	private static final int[] cycles = {3, 3, 15, 15};
 
 	private static final String[] fileNames = {
-			prefix + "3/current_1.dat", prefix + "3/current_2.dat", prefix + "3/voltage.dat",
+			prefix + "3/current_1.dat", prefix + "3/current_2.dat",
 			prefix + "5/current_1.dat", prefix + "5/current_2.dat",
 	};
 
