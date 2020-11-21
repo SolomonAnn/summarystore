@@ -76,7 +76,7 @@ public class WriteREDDHighData {
 			if (semaphore != null) {
 				semaphore.acquireUninterruptibly();
 			}
-			CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 1, 1))
+			CountBasedWBMH wbmh = new CountBasedWBMH(new RationalPowerWindowing(1, 1, 3, 1))
 					.setValuesAreLongs(true)
 					.setBufferSize(800_000_000)
 					.setWindowsPerMergeBatch(100_000)
@@ -133,7 +133,7 @@ public class WriteREDDHighData {
 						logger.info("streamID {} wave {}", streamID, i);
 					}
 					logger.info("streamID {} cycle {}", streamID, c);
-					base += Arrays.stream(intervals).max().getAsLong();
+					base += Arrays.stream(intervals).sum() + Arrays.stream(intervals).max().getAsLong();
 				}
 				logger.info("streamID {} time {}", streamID, time);
 				wbmh.flushAndSetUnbuffered();
