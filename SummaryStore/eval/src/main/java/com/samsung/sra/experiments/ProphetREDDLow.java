@@ -53,7 +53,7 @@ public class ProphetREDDLow {
 				try {
 					ResultError sum = (ResultError) store.query(streamID, startTime + j * range[streamID] / QUERY_TIME, startTime + (j + 1) * range[streamID] / QUERY_TIME, 3);
 					ResultError count = (ResultError) store.query(streamID, startTime + j * range[streamID] / QUERY_TIME, startTime + (j + 1) * range[streamID] / QUERY_TIME, 2);
-					result[i][j] = Double.parseDouble(sum.result.toString()) / Double.parseDouble(count.result.toString());
+					result[i][j] = Double.parseDouble(sum.result.toString()) / (Double.parseDouble(count.result.toString()) + 1);
 				} catch (StreamException | BackingStoreException e) {
 					logger.info(e.getMessage());
 				}
@@ -67,7 +67,7 @@ public class ProphetREDDLow {
 		for (int i = 0; i < offset[streamID].length; i++) {
 			logger.info("offset = {}", offset[streamID][i]);
 			for (int j = 0; j < QUERY_TIME; j++) {
-				logger.info("{},{}", timestamp[i][j], result[i][j]);
+				System.out.println(timestamp[i][j] + "," + result[i][j]);
 			}
 		}
 	}
