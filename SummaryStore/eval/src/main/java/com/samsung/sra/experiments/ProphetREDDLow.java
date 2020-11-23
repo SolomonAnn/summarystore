@@ -65,6 +65,7 @@ public class ProphetREDDLow {
 
 	private void print(long[][] timestamp, double[][] result, int streamID){
 		for (int i = 0; i < offset[streamID].length; i++) {
+			logger.info("offset = {}", offset[streamID][i]);
 			for (int j = 0; j < QUERY_TIME; j++) {
 				logger.info("{},{}", timestamp[i][j], result[i][j]);
 			}
