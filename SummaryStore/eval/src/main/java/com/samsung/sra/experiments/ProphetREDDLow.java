@@ -16,7 +16,7 @@ public class ProphetREDDLow {
 
 	private static int[] stream = {0};
 	private static long[][] offset = {
-		{0, 4000 * TimeUnit.YEAR.timeInSec},
+		{0, 100 * TimeUnit.YEAR.timeInSec, 1000 * TimeUnit.YEAR.timeInSec, 2000 * TimeUnit.YEAR.timeInSec, 3000 * TimeUnit.YEAR.timeInSec, 4000 * TimeUnit.YEAR.timeInSec},
 	};
 	private static long[] range = {
 		37 * TimeUnit.DAY.timeInSec,
