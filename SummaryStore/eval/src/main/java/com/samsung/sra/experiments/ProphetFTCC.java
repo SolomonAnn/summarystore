@@ -12,8 +12,8 @@ import java.io.IOException;
 public class ProphetFTCC {
 	private static final Logger logger = LoggerFactory.getLogger(ProphetFTCC.class);
 
-	private static final long start[] = {1605906499988109L, 1605822026988517L, 1604713939993869L, 1603521380058189L};
-	private static final long end[] = {1605906804987854L, 1605822331988262L, 1604714244993614L, 1603521685057934L};
+	private static final long start[] = {1605901530988133L, 1605822026988517L, 1604713939993869L, 1603521380058189L};
+	private static final long end[] = {1605901835987878L, 1605822331988262L, 1604714244993614L, 1603521685057934L};
 
 	private static int streamID = 0;
 	private static int QUERY_TIME = 1000;
