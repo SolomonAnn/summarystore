@@ -12,11 +12,11 @@ import java.io.IOException;
 public class ProphetFTCC {
 	private static final Logger logger = LoggerFactory.getLogger(ProphetFTCC.class);
 
-	private static final long start = 1603417336000000L;
-	private static final long end = 1605906804987854L;
+	private static final long start[] = {1603422000000109L, 1603501503999725L, 1604609590994373L, 1605802150988613L};
+	private static final long end[] = {1603422304999854L, 1603501808999470L, 1604609895994118L, 1605802455988358L};
 
-	private static int[] stream = {0, 1, 2, 3, 4};
-	private static int QUERY_TIME = 10000;
+	private static int streamID = 0;
+	private static int QUERY_TIME = 1000;
 
 	private static final String directory = "/data/tdstore_throughput_ftcc";
 
@@ -29,28 +29,21 @@ public class ProphetFTCC {
 		QUERY_TIME = Integer.parseInt(args[0]);
 
 		SummaryStore store = new SummaryStore(directory);
-		long st = System.currentTimeMillis();
 		ProphetFTCC prophetFTCC = new ProphetFTCC();
 
 		prophetFTCC.queryTest(store);
-
-		logger.info("-QUERY-ALL TASK FINISH in {} min", (System.currentTimeMillis() - st) / 1000 / 60.0);
 	}
 
 	public void queryTest(SummaryStore store) {
-		long st = System.currentTimeMillis();
+		long[][] timestamp = new long[start.length][QUERY_TIME];
+		double[][] result = new double[start.length][QUERY_TIME];
 
-		long[][] latency = new long [stream.length][QUERY_TIME];
-		double[][] result = new double [stream.length][QUERY_TIME];
-
-		for (int i = 0; i < stream.length; i++) {
-			long interval = (end - start) / QUERY_TIME;
+		for (int i = 0; i < start.length; i++) {
+			long interval = (end[i] - start[i]) / QUERY_TIME;
 			for (int j = 0; j < QUERY_TIME; j++) {
-				long streamID = stream[i];
-				long startTime = start + j * interval;
+				long startTime = start[i] + j * interval;
 				long endTime = startTime + interval;
 				logger.info("stream = {}, startTime = {}, endTime = {}", streamID, startTime, endTime);
-				long t0 = System.currentTimeMillis();
 				try {
 					ResultError sum = (ResultError) store.query(streamID, startTime, endTime, 3);
 					ResultError count = (ResultError) store.query(streamID, startTime, endTime, 2);
@@ -58,32 +51,17 @@ public class ProphetFTCC {
 				} catch (StreamException | BackingStoreException e) {
 					logger.info(e.getMessage());
 				}
-				long t1 = System.currentTimeMillis();
-				latency[i][j] = t1 - t0;
+				timestamp[i][j] = (startTime + endTime) / 2;
 			}
 		}
 
-		logger.info("-QUERY-Execute {} queries in {} s.", stream.length * stream.length, (System.currentTimeMillis() - st) / 1000);
-		printLatency(latency);
-		printQueryResult(result);
+		print(timestamp, result);
 	}
 
-	private void printLatency(long[][] latency) {
-		logger.info("----------Latency----------");
-		for (int i = 0; i < stream.length; i++) {
-			logger.info("StreamID {}:", stream[i]);
+	private void print(long[][] timestamp, double[][] result){
+		for (int i = 0; i < start.length; i++) {
 			for (int j = 0; j < QUERY_TIME; j++) {
-				logger.info("Time {} {}", j, latency[i][j]);
-			}
-		}
-	}
-
-	private void printQueryResult(double[][] result){
-		logger.info("----------Result----------");
-		for (int i = 0; i < stream.length; i++) {
-			logger.info("StreamID {}:", stream[i]);
-			for (int j = 0; j < QUERY_TIME; j++) {
-				logger.info("Time {} {}", j, result[i][j]);
+				System.out.println(timestamp[i][j] + "," + result[i][j]);
 			}
 		}
 	}
