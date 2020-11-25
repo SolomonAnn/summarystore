@@ -60,6 +60,7 @@ public class ProphetFTCC {
 
 	private void print(long[][] timestamp, double[][] result){
 		for (int i = 0; i < start.length; i++) {
+			logger.info("offset = {}", i);
 			for (int j = 0; j < QUERY_TIME; j++) {
 				System.out.println(timestamp[i][j] + "," + result[i][j]);
 			}
