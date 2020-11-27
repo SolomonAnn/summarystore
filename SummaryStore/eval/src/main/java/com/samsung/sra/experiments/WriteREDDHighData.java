@@ -108,7 +108,7 @@ public class WriteREDDHighData {
 					allPoints[i][0] = Long.parseLong(points[0].replace(".", ""));
 					allPoints[i][1] = Long.parseLong(points[1].substring(0, points[1].indexOf('.')));
 					for (int j = 0; j < pointNumPerWave; j++) {
-						allPoints[i][j + 2] = Long.parseLong(points[j].replace(".", ""));
+						allPoints[i][j + 2] = Long.parseLong(points[j + 2].replace(".", ""));
 					}
 				}
 
@@ -133,7 +133,7 @@ public class WriteREDDHighData {
 						logger.info("streamID {} wave {}", streamID, i);
 					}
 					logger.info("streamID {} cycle {}", streamID, c);
-					base += Arrays.stream(intervals).sum() + Arrays.stream(intervals).max().getAsLong();
+					base += Arrays.stream(intervals).sum() + 1;
 				}
 				logger.info("streamID {} time {}", streamID, time);
 				wbmh.flushAndSetUnbuffered();
