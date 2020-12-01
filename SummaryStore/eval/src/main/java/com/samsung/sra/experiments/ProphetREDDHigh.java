@@ -34,8 +34,7 @@ public class ProphetREDDHigh {
 		double[][] result = new double[offset.length][QUERY_TIME];
 
 		for (int i = 0; i < offset.length; i++) {
-			long endTime = end - offset[i];
-			long startTime = endTime - range;
+			long startTime = end - offset[i];
 			for (int j = 0; j < QUERY_TIME; j++) {
 				try {
 					ResultError sum = (ResultError) store.query(streamID, startTime + j * range / QUERY_TIME, startTime + (j + 1) * range / QUERY_TIME, 3);
