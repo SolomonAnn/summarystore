@@ -37,7 +37,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class MeasureThroughput {
-    private static final String directory = "/data/tdstore_throughput";
+    private static final String directory = "/data/tdstore_throughput_pareto";
     private static final Logger logger = LoggerFactory.getLogger(MeasureThroughput.class);
 
     public static void main(String[] args) throws Exception {
@@ -66,12 +66,14 @@ public class MeasureThroughput {
             ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor)Executors.newScheduledThreadPool(1);
             executor.scheduleAtFixedRate(() -> {
                 try {
-                    for (int j = 2; j < 4; j++) {
-                        long startTime = System.currentTimeMillis();
-                        ResultError resultError = (ResultError) store.query(0L, 7776000000L, 15552000000L, j);
-                        double result = Double.parseDouble(resultError.result.toString());
-                        logger.info("func {} latency {} ms result {}", j, System.currentTimeMillis() - startTime, result);
-                    }
+                    long startTime = System.currentTimeMillis();
+                    ResultError resultError = (ResultError) store.query(8L, 233496979753L, 233497039753L, 3);
+                    double result = Double.parseDouble(resultError.result.toString());
+                    logger.info("func 3 latency {} ms result {}", System.currentTimeMillis() - startTime, result);
+                    startTime = System.currentTimeMillis();
+                    resultError = (ResultError) store.query(0L, 219674028248L, 219674088248L, 2);
+                    result = Double.parseDouble(resultError.result.toString());
+                    logger.info("func 2 latency {} ms result {}", System.currentTimeMillis() - startTime, result);
                 } catch (StreamException | BackingStoreException e) {
                     logger.info(e.getMessage());
                 }
@@ -129,15 +131,15 @@ public class MeasureThroughput {
                 long startTime = System.currentTimeMillis();
                 long queryTime = System.currentTimeMillis();
                 long time = 0;
-                PoissonDistribution poissonDistribution = new PoissonDistribution(10);
-//                ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
+//                PoissonDistribution poissonDistribution = new PoissonDistribution(10);
+                ParetoDistribution paretoDistribution = new ParetoDistribution(1.0, 1.2);
                 for (long t = 0; t < N; ++t) {
                     if (System.currentTimeMillis() - queryTime > 180_000L && streamID == 0L) {
                         logger.info("stream ID " + streamID + " time " + time);
                         queryTime = System.currentTimeMillis();
                     }
-                    time += 1 + poissonDistribution.next(splittableRandom);
-//                    time += 1 + paretoDistribution.next(splittableRandom);
+//                    time += 1 + poissonDistribution.next(splittableRandom);
+                    time += 1 + paretoDistribution.next(splittableRandom);
                     long v = splittableRandom.nextInt(100);
                     store.append(streamID, time, v);
                     if (System.currentTimeMillis() - queryTime > 180_000L && streamID == 0L) {
